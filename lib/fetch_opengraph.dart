@@ -3,8 +3,12 @@ import 'dart:io';
 
 import 'package:opengraph/entities/open_graph_entity.dart';
 
+abstract class OpenGraphRequestInterface {
+  Future<OpenGraphEntity?> fetch(String url);
+  void initProvider(String url);
+}
 
-class OpenGraphRequest{
+class OpenGraphRequest implements OpenGraphRequestInterface{
   static final OpenGraphRequest _instance = OpenGraphRequest._internal();
 
   factory OpenGraphRequest() => _instance;
@@ -14,42 +18,24 @@ class OpenGraphRequest{
   String? _provider;
 
   // Inicializa el proveedor con la URL
+  @override
   void initProvider(String url) {
     _provider = url;
   }
-
-  Future<OpenGraphEntity> fetch(String url) async {
+  @override
+  Future<OpenGraphEntity?> fetch(String url) async {
     final String url0 = "$_provider$url";
     final httpClient = HttpClient();
+    try{
       final request = await httpClient.getUrl(Uri.parse(url0));
       final response = await request.close();
-
-      if (response.statusCode == HttpStatus.ok) {
-        final responseBody = await response.transform(utf8.decoder).join();
-        final json = jsonDecode(responseBody);
-        httpClient.close();
-        return OpenGraphEntity.fromJson(json["data"]);
-      } else {
-        return OpenGraphEntity.fromJson({
-          "title": "",
-          "description": "",
-          "locale": "",
-          "type": "",
-          "url": "",
-          "site_name": "",
-          "updated_time": "",
-          "image": "",
-          "image_secure_url": "",
-          "image_width": "",
-          "image_height": "",
-          "image_alt": "",
-          "image_type": "",
-          "twitter_card": "",
-          "twitter_title": "",
-          "twitter_description": "",
-          "twitter_site": ""
-        });
-      }
+      final responseBody = await response.transform(utf8.decoder).join();
+      final json = jsonDecode(responseBody);
+      httpClient.close();
+      return OpenGraphEntity.fromJson(json["data"]);
+    } catch (e) {
+      return null;
+    }
   }
 
 }

@@ -7,7 +7,7 @@ import 'package:opengraph/entities/open_graph_entity.dart';
 
 import 'fetch_opengraph.dart';
 
-class OpenGraphPreview extends StatefulWidget {
+class OpenGraphPreview extends StatelessWidget {
   final String url;
   final double height;
   final double borderRadius;
@@ -32,49 +32,50 @@ class OpenGraphPreview extends StatefulWidget {
       });
 
   @override
-  State<OpenGraphPreview> createState() => _OpenGraphPreviewState();
-}
-
-class _OpenGraphPreviewState extends State<OpenGraphPreview> {
-
-  @override
   Widget build(BuildContext context) {
     final provider = OpenGraphRequest();
     future(){
-      return provider.fetch(widget.url);
+      return provider.fetch(url);
     }
 
     return Container(
+      margin: const EdgeInsets.only(bottom: 10, left: 10, right: 10),
       decoration: BoxDecoration(
-        color: widget.backgroundColor,
-        borderRadius: BorderRadius.circular(widget.borderRadius),
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(borderRadius),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(widget.borderRadius),
+        borderRadius: BorderRadius.circular(borderRadius),
         child: FutureBuilder(
           future: future(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Container(
-                  height: widget.height,
-                  color: widget.backgroundColor,
+                  height: height,
+                  color: backgroundColor,
                   child: Center(child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(widget.progressColor),
+                    valueColor: AlwaysStoppedAnimation<Color>(progressColor),
                   ))
               );
             }
 
-            if (snapshot.hasError) {
+            if (snapshot.hasError && !snapshot.hasData && snapshot.data == null) {
               return Container(
-                  height: widget.height,
-                  color: widget.backgroundColor,
-                  child: Center(child: Text(widget.error))
+                  height: height,
+                  color: backgroundColor,
+                  child: Center(child: Text(error, style: TextStyle(color: Colors.pink.shade200)))
               );
             }
 
             final data = snapshot.data as OpenGraphEntity;
+
+            if(data.title == "" && data.description == "" && data.image == "") {
+              return const SizedBox.shrink();
+            }
+
+
             return SizedBox(
-              height: widget.height,
+              height: height,
               width: MediaQuery.of(context).size.width,
               child: Stack(
                 children: [
@@ -86,9 +87,9 @@ class _OpenGraphPreviewState extends State<OpenGraphPreview> {
                     left: 0.0,
                     right: 0.0,
                     child: Padding(
-                      padding: EdgeInsets.all(widget.borderRadius/2),
+                      padding: EdgeInsets.all(borderRadius/2),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(widget.borderRadius/2),
+                        borderRadius: BorderRadius.circular(borderRadius/2),
                         child: BackdropFilter(
                           filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
                           child: Container(
@@ -99,8 +100,8 @@ class _OpenGraphPreviewState extends State<OpenGraphPreview> {
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children:[
-                                  if(data.title!="")Text(data.title, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                  if(data.description!="")Text(data.title, style: const TextStyle(color: Colors.white, fontSize: 12), maxLines: 2, overflow: TextOverflow.ellipsis),
+                                  if(data.title!="")Text(data.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                  if(data.description!="")Text(data.description, style: const TextStyle(color: Colors.white), maxLines: 2, overflow: TextOverflow.ellipsis),
                                   Text(Uri.parse(data.url).host, style: const TextStyle(color: Colors.white54)),
                                 ]),
                           ),
@@ -109,7 +110,7 @@ class _OpenGraphPreviewState extends State<OpenGraphPreview> {
                     ),
                   ),
                   Visibility(
-                    visible: widget.showReloadButton,
+                    visible: showReloadButton,
                     child: Positioned(
                         right: 0.0,
                         top: 0.0,
@@ -124,7 +125,7 @@ class _OpenGraphPreviewState extends State<OpenGraphPreview> {
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.all(4),
-                                child: Text(widget.preview, style: const TextStyle(color: Colors.white)),
+                                child: Text(preview, style: const TextStyle(color: Colors.white)),
                               )
                             ),
                             Card(
@@ -135,8 +136,8 @@ class _OpenGraphPreviewState extends State<OpenGraphPreview> {
                               child: Padding(
                                 padding: const EdgeInsets.all(4),
                                 child: GestureDetector(
-                                  onTap: () => setState(() {}),
-                                  child: Text(widget.refresh, style: const TextStyle(color: Colors.white))),
+                                  onTap: () => provider.fetch(url),
+                                  child: Text(refresh, style: const TextStyle(color: Colors.white))),
                               ),
                             )
                           ],
