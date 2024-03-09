@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:opengraph/opengraph.dart';
 
-class OpenGraphProvider{
+class OpenGraphProvider {
   static OpenGraphCredentials CONFIG = OpenGraphCredentials(
       url: "https://app.server.gt/api/opengraph/?site=",
       token: "<TOKEN>",
-      maxObjects: 1000
-  );
+      maxObjects: 1000);
 }
 
 main() async {
