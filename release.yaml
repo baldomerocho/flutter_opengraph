@@ -1,0 +1,21 @@
+name: Crear Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v2
+
+      - name: Crear Release
+        run: |
+          git config user.email ${{ secrets.GITHUB_EMAIL }}
+          git config user.name ${{ secrets.GITHUB_USER }}
+          git tag -a v${{ github.run_number }} -m "Release automático v${{ github.run_number }}"
+          git push --follow-tags
