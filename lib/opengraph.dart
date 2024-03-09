@@ -7,7 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:opengraph/entities/open_graph_entity.dart';
 
-import 'fetch_opengraph.dart';
+import 'src/fetch_opengraph.dart';
+export 'src/fetch_opengraph.dart';
 
 class OpenGraphPreview extends StatefulWidget {
   final String url;

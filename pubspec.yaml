@@ -1,8 +1,9 @@
 name: opengraph
 description: OpenGraph
-version: 0.0.6
+version: 0.0.7
 homepage: https://datogedon.com
 license: MIT
+github: https://github.com/baldomerocho/flutter_opengraph
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
