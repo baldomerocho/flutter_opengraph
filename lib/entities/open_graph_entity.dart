@@ -14,25 +14,31 @@ OpenGraphEntity openGraphEntityFromJson(String str) =>
 String openGraphEntityToJson(OpenGraphEntity data) =>
     json.encode(data.toJson());
 
+/// OpenGraphEntity represents the OpenGraph protocol
+/// Properties:
+/// - title: Site title, example: "Open Graph protocol"
+/// - description: Site description, example: "The Open Graph protocol enables any web page to become a rich object in a social graph."
+/// - locale: Site locale, example: "en_US"
+/// - type: Site type, example: "website"
+/// - url: Site url, example: "http://ogp.me/"
+/// - siteName: Site name, example: "Open Graph protocol"
+/// - image: Site image, example: "http://ogp.me/logo.png"
 class OpenGraphEntity {
+  /// title of the site
   String title;
+  // description of the site
   String description;
+  // locale of the site
   String locale;
+  // type of the site
   String type;
+  // url of the site
   String url;
+  // site name
   String siteName;
+  // image of the site
   String image;
 
-  /// OpenGraphEntity
-  ///
-  /// Properties:
-  /// - title: Site title, example: "Open Graph protocol"
-  /// - description: Site description, example: "The Open Graph protocol enables any web page to become a rich object in a social graph."
-  /// - locale: Site locale, example: "en_US"
-  /// - type: Site type, example: "website"
-  /// - url: Site url, example: "http://ogp.me/"
-  /// - siteName: Site name, example: "Open Graph protocol"
-  /// - image: Site image, example: "http://ogp.me/logo.png"
   OpenGraphEntity({
     required this.title,
     required this.description,
