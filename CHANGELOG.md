@@ -19,3 +19,7 @@
 
 * Published to pub.dev with the correct version
 * Fixed expose the library
+
+## 0.0.10 (2024-03-09)
+
+* Add Documentation and example
