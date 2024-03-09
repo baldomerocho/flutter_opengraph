@@ -6,6 +6,6 @@
 
 * Fixed a bug in the `foo` function
 
-## 0.0.006 (2024-03-09)
+## 0.0.6 (2024-03-09)
 
 * Published to pub.dev
