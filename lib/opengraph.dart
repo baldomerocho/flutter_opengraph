@@ -2,6 +2,7 @@ library opengraph;
 
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:opengraph/entities/open_graph_entity.dart';
 
@@ -17,6 +18,8 @@ class OpenGraphPreview extends StatelessWidget {
   final String preview;
   final String error;
   final String refresh;
+  final Widget childError;
+  final Widget childPreview;
 
   const OpenGraphPreview(
       {super.key,
@@ -29,6 +32,8 @@ class OpenGraphPreview extends StatelessWidget {
       this.preview = "Preview",
       this.error = "Error on fetch OpenGraph",
       this.refresh = "Refresh",
+      this.childError = const SizedBox.shrink(),
+      this.childPreview = const SizedBox.shrink(),
       });
 
   @override
@@ -53,8 +58,8 @@ class OpenGraphPreview extends StatelessWidget {
               return Container(
                   height: height,
                   color: backgroundColor,
-                  child: Center(child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                  child: Center(child: CupertinoActivityIndicator(
+                    color: progressColor,
                   ))
               );
             }
@@ -82,6 +87,7 @@ class OpenGraphPreview extends StatelessWidget {
                   if(data.image != "") Container(
                     decoration: BoxDecoration(image: DecorationImage(image: NetworkImage(data.image), fit: BoxFit.cover)),
                   ),
+                  if(data.image != "") childError,
                   Positioned(
                     bottom: 0.0,
                     left: 0.0,

@@ -24,6 +24,7 @@ class OpenGraphRequest implements OpenGraphRequestInterface{
   }
   @override
   Future<OpenGraphEntity?> fetch(String url) async {
+    url = encodeBase64(url);
     final String url0 = "$_provider$url";
     final httpClient = HttpClient();
     try{
@@ -32,10 +33,14 @@ class OpenGraphRequest implements OpenGraphRequestInterface{
       final responseBody = await response.transform(utf8.decoder).join();
       final json = jsonDecode(responseBody);
       httpClient.close();
-      return OpenGraphEntity.fromJson(json["data"]);
+      return OpenGraphEntity.fromJson(json);
     } catch (e) {
       return null;
     }
   }
 
+}
+
+String encodeBase64(string) {
+  return base64.encode(utf8.encode(string));
 }
