@@ -9,3 +9,13 @@
 ## 0.0.6 (2024-03-09)
 
 * Published to pub.dev
+
+## 0.0.7 (2024-03-09)
+
+* Published to pub.dev with the correct version
+* Fixed expose the library
+
+## 0.0.8 (2024-03-09)
+
+* Published to pub.dev with the correct version
+* Fixed expose the library
