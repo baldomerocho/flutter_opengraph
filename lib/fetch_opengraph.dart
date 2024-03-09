@@ -6,12 +6,13 @@ import 'package:opengraph/entities/open_graph_entity.dart';
 class OpenGraphCredentials {
   final String url;
   final String token;
+  final int maxObjects;
 
-  OpenGraphCredentials({required this.url, required this.token});
+  OpenGraphCredentials({required this.url, required this.token, this.maxObjects = 1000});
 
   @override
   String toString() {
-    return "OpenGraphCredentials(url: $url, token: $token)";
+    return "OpenGraphCredentials(url: $url, token: $token, maxObjects: $maxObjects)";
   }
 }
 
@@ -27,6 +28,7 @@ class OpenGraphRequest implements OpenGraphRequestInterface{
 
   OpenGraphRequest._internal();
   Map<String, OpenGraphEntity> urls = {};
+  int _maxObjects = 1000;
 
   OpenGraphCredentials? _credentials;
 
@@ -34,6 +36,7 @@ class OpenGraphRequest implements OpenGraphRequestInterface{
   @override
   void initProvider(OpenGraphCredentials credentials) {
     _credentials = credentials;
+    _maxObjects = credentials.maxObjects;
   }
   @override
   Future<OpenGraphEntity?> fetch(String url) async {
@@ -51,6 +54,7 @@ class OpenGraphRequest implements OpenGraphRequestInterface{
       final json = jsonDecode(responseBody);
       httpClient.close();
       overrideObjectOnList(OpenGraphEntity.fromJson(json), url);
+      maxObjects();
       return OpenGraphEntity.fromJson(json);
     } catch (e) {
       return null;
@@ -64,6 +68,13 @@ class OpenGraphRequest implements OpenGraphRequestInterface{
     final object = urls[id];
     if(object != null)return OpenGraphEntity.fromJson(object.toJson());
     return null;
+  }
+
+  void clearList() => urls.clear();
+  void maxObjects() {
+    if(urls.length > _maxObjects){
+      urls.remove(urls.keys.first);
+    }
   }
 }
 
