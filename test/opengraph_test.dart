@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:opengraph/entities/open_graph_entity.dart';
-import 'package:opengraph/src/fetch_opengraph.dart';
 import 'package:opengraph/opengraph.dart';
 import 'package:mockito/mockito.dart';
 import 'package:flutter/material.dart';
