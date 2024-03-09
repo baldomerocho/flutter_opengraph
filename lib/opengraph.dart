@@ -39,7 +39,7 @@ class OpenGraphPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = OpenGraphRequest();
-    future(){
+    Future<OpenGraphEntity?> future(){
       return provider.fetch(url);
     }
 
