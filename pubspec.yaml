@@ -1,7 +1,8 @@
 name: opengraph
 description: OpenGraph
-version: 0.0.1
-homepage: datogedon.com
+version: 0.0.006
+homepage: https://datogedon.com
+license: MIT
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -15,6 +16,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
+  mockito: ^5.4.2
 
 flutter:
 

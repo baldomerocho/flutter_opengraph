@@ -2,12 +2,14 @@ library opengraph;
 
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:opengraph/entities/open_graph_entity.dart';
 
 import 'fetch_opengraph.dart';
 
-class OpenGraphPreview extends StatelessWidget {
+class OpenGraphPreview extends StatefulWidget {
   final String url;
   final double height;
   final double borderRadius;
@@ -17,6 +19,9 @@ class OpenGraphPreview extends StatelessWidget {
   final String preview;
   final String error;
   final String refresh;
+  final Widget childError;
+  final Widget childPreview;
+  final OpenGraphRequestInterface? provider;
 
   const OpenGraphPreview(
       {super.key,
@@ -29,41 +34,56 @@ class OpenGraphPreview extends StatelessWidget {
       this.preview = "Preview",
       this.error = "Error on fetch OpenGraph",
       this.refresh = "Refresh",
+      this.childError = const SizedBox.shrink(),
+      this.childPreview = const SizedBox.shrink(),
+        //OpenGraphRequest
+      this.provider,
       });
 
   @override
+  State<OpenGraphPreview> createState() => _OpenGraphPreviewState();
+}
+
+class _OpenGraphPreviewState extends State<OpenGraphPreview> {
+  late OpenGraphRequestInterface defaultProvider;
+
+  @override
+  void initState() {
+    defaultProvider = widget.provider ?? OpenGraphRequest();
+    super.initState();
+  }
+  @override
   Widget build(BuildContext context) {
-    final provider = OpenGraphRequest();
-    future(){
-      return provider.fetch(url);
+    Future<OpenGraphEntity?> future(){
+        return defaultProvider.fetch(widget.url);
     }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10, left: 10, right: 10),
       decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(borderRadius),
+        color: widget.backgroundColor,
+        borderRadius: BorderRadius.circular(widget.borderRadius),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
+        borderRadius: BorderRadius.circular(widget.borderRadius),
         child: FutureBuilder(
           future: future(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Container(
-                  height: height,
-                  color: backgroundColor,
-                  child: Center(child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                  height: widget.height,
+                  color: widget.backgroundColor,
+                  child: Center(child: CupertinoActivityIndicator(
+                    color: widget.progressColor,
                   ))
               );
             }
 
             if (snapshot.hasError && !snapshot.hasData && snapshot.data == null) {
               return Container(
-                  height: height,
-                  color: backgroundColor,
-                  child: Center(child: Text(error, style: TextStyle(color: Colors.pink.shade200)))
+                  height: widget.height,
+                  color: widget.backgroundColor,
+                  child: Center(child: Text(widget.error, style: TextStyle(color: Colors.pink.shade200)))
               );
             }
 
@@ -75,21 +95,24 @@ class OpenGraphPreview extends StatelessWidget {
 
 
             return SizedBox(
-              height: height,
+              height: widget.height,
               width: MediaQuery.of(context).size.width,
               child: Stack(
                 children: [
-                  if(data.image != "") Container(
-                    decoration: BoxDecoration(image: DecorationImage(image: NetworkImage(data.image), fit: BoxFit.cover)),
-                  ),
+                  // if(data.image != "") Container(
+                  //   decoration: BoxDecoration(image: DecorationImage(image: NetworkImage(data.image), fit: BoxFit.cover)),
+                  // ),
+                  // add imagen Image.network and fill the container
+                  if(data.image != "" && kReleaseMode) Image.network(data.image, fit: BoxFit.fitWidth, width: MediaQuery.of(context).size.width, height: widget.height),
+                  if(data.image != "") widget.childError,
                   Positioned(
                     bottom: 0.0,
                     left: 0.0,
                     right: 0.0,
                     child: Padding(
-                      padding: EdgeInsets.all(borderRadius/2),
+                      padding: EdgeInsets.all(widget.borderRadius/2),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(borderRadius/2),
+                        borderRadius: BorderRadius.circular(widget.borderRadius/2),
                         child: BackdropFilter(
                           filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
                           child: Container(
@@ -110,7 +133,7 @@ class OpenGraphPreview extends StatelessWidget {
                     ),
                   ),
                   Visibility(
-                    visible: showReloadButton,
+                    visible: widget.showReloadButton,
                     child: Positioned(
                         right: 0.0,
                         top: 0.0,
@@ -125,7 +148,7 @@ class OpenGraphPreview extends StatelessWidget {
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.all(4),
-                                child: Text(preview, style: const TextStyle(color: Colors.white)),
+                                child: Text(widget.preview, style: const TextStyle(color: Colors.white)),
                               )
                             ),
                             Card(
@@ -136,8 +159,8 @@ class OpenGraphPreview extends StatelessWidget {
                               child: Padding(
                                 padding: const EdgeInsets.all(4),
                                 child: GestureDetector(
-                                  onTap: () => provider.fetch(url),
-                                  child: Text(refresh, style: const TextStyle(color: Colors.white))),
+                                  onTap: () => defaultProvider.fetch(widget.url),
+                                  child: Text(widget.refresh, style: const TextStyle(color: Colors.white))),
                               ),
                             )
                           ],
