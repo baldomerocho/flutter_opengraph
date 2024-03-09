@@ -6,6 +6,16 @@
 
 * Fixed a bug in the `foo` function
 
-## 0.0.006 (2024-03-09)
+## 0.0.6 (2024-03-09)
 
 * Published to pub.dev
+
+## 0.0.7 (2024-03-09)
+
+* Published to pub.dev with the correct version
+* Fixed expose the library
+
+## 0.0.9 (2024-03-09)
+
+* Published to pub.dev with the correct version
+* Fixed expose the library

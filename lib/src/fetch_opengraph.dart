@@ -8,7 +8,8 @@ class OpenGraphCredentials {
   final String token;
   final int maxObjects;
 
-  OpenGraphCredentials({required this.url, required this.token, this.maxObjects = 1000});
+  OpenGraphCredentials(
+      {required this.url, required this.token, this.maxObjects = 1000});
 
   @override
   String toString() {
@@ -21,7 +22,7 @@ abstract class OpenGraphRequestInterface {
   void initProvider(OpenGraphCredentials credentials);
 }
 
-class OpenGraphRequest implements OpenGraphRequestInterface{
+class OpenGraphRequest implements OpenGraphRequestInterface {
   static final OpenGraphRequest _instance = OpenGraphRequest._internal();
 
   factory OpenGraphRequest() => _instance;
@@ -38,17 +39,19 @@ class OpenGraphRequest implements OpenGraphRequestInterface{
     _credentials = credentials;
     _maxObjects = credentials.maxObjects;
   }
+
   @override
   Future<OpenGraphEntity?> fetch(String url) async {
     url = encodeBase64(url);
-    if(findObjectOnList(url) != null){
+    if (findObjectOnList(url) != null) {
       return findObjectOnList(url);
     }
     final String url0 = "${_credentials!.url}$url";
     final httpClient = HttpClient();
-    try{
+    try {
       final request = await httpClient.getUrl(Uri.parse(url0));
-      request.headers.add(HttpHeaders.authorizationHeader, "Bearer ${_credentials!.token}");
+      request.headers.add(
+          HttpHeaders.authorizationHeader, "Bearer ${_credentials!.token}");
       final response = await request.close();
       final responseBody = await response.transform(utf8.decoder).join();
       final json = jsonDecode(responseBody);
@@ -61,18 +64,18 @@ class OpenGraphRequest implements OpenGraphRequestInterface{
     }
   }
 
-  void overrideObjectOnList(OpenGraphEntity object,String id) => urls[id] = object;
+  void overrideObjectOnList(OpenGraphEntity object, String id) =>
+      urls[id] = object;
 
-
-  OpenGraphEntity? findObjectOnList(String id){
+  OpenGraphEntity? findObjectOnList(String id) {
     final object = urls[id];
-    if(object != null)return OpenGraphEntity.fromJson(object.toJson());
+    if (object != null) return OpenGraphEntity.fromJson(object.toJson());
     return null;
   }
 
   void clearList() => urls.clear();
   void maxObjects() {
-    if(urls.length > _maxObjects){
+    if (urls.length > _maxObjects) {
       urls.remove(urls.keys.first);
     }
   }
