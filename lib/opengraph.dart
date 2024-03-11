@@ -1,9 +1,14 @@
+///
+/// @project  : opengraph
+/// @author   : Baldomero (datogedon@gmail.com)
+/// @link     : https://github.com/baldomerocho/flutter_opengraph/
+/// @Disc     : a dart and flutter package to fetch and preview OpenGraph data
+///
 library opengraph;
 
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:opengraph/entities/open_graph_entity.dart';
 
@@ -24,6 +29,14 @@ class OpenGraphPreview extends StatefulWidget {
   final Widget childPreview;
   final OpenGraphRequestInterface? provider;
 
+  ///
+  /// This constructor will create an OpenGraphPreview instance.
+  ///
+  /// All parameters are mandatory however [height],
+  /// [borderRadius], [backgroundColor], [progressColor], [showReloadButton],
+  /// [preview], [error], [refresh], [childError], [childPreview] have a default values, so can be ignored.
+  /// Will throw an exception if the line above isn't satisfied.
+  ///
   const OpenGraphPreview({
     super.key,
     required this.url,
@@ -105,11 +118,7 @@ class _OpenGraphPreviewState extends State<OpenGraphPreview> {
                 width: MediaQuery.of(context).size.width,
                 child: Stack(
                   children: [
-                    // if(data.image != "") Container(
-                    //   decoration: BoxDecoration(image: DecorationImage(image: NetworkImage(data.image), fit: BoxFit.cover)),
-                    // ),
-                    // add imagen Image.network and fill the container
-                    if (data.image != "" && kReleaseMode)
+                    if (data.image != "" && widget.provider == null)
                       Image.network(data.image,
                           fit: BoxFit.fitWidth,
                           width: MediaQuery.of(context).size.width,
