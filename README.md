@@ -4,6 +4,10 @@
 
 This widget allows you to preview the OpenGraph data of a URL.
 
+## Screenshots
+
+![OpenGraph Preview]("ss/Captura de pantalla 2024-03-11 a la(s) 18.30.31.png")
+
 ## Api Key
 You can get an API key from [https://recursos.datogedon.com/product/opengraph-api-key/](https://recursos.datogedon.com/product/opengraph-api-key/) to use this package. Use the free plan.
 <br>
