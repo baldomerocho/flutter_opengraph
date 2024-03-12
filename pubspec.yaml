@@ -1,6 +1,6 @@
 name: opengraph
 description: A Dart/Flutter package for seamless integration of OpenGraph metadata, allowing easy display of website information via API.
-version: 0.0.13
+version: 0.0.14
 homepage: https://datogedon.com
 license: MIT
 repository: https://github.com/baldomerocho/flutter_opengraph
@@ -21,4 +21,6 @@ dev_dependencies:
   mockito: ^5.4.2
 
 flutter:
+  assets:
+    - assets/notfound.jpeg
 

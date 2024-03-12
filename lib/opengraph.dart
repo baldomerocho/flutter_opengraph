@@ -5,14 +5,13 @@
 /// @Disc     : a dart and flutter package to fetch and preview OpenGraph data
 ///
 library opengraph;
-
-import 'dart:ui';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:opengraph/entities/open_graph_entity.dart';
 
 import 'src/fetch_opengraph.dart';
+import 'src/salve_objetcts.dart';
+import 'src/widget_opengraph.dart';
 export 'src/fetch_opengraph.dart';
 
 class OpenGraphPreview extends StatefulWidget {
@@ -60,10 +59,12 @@ class OpenGraphPreview extends StatefulWidget {
 
 class _OpenGraphPreviewState extends State<OpenGraphPreview> {
   late OpenGraphRequestInterface defaultProvider;
+  bool _isProduction = true;
 
   @override
   void initState() {
     defaultProvider = widget.provider ?? OpenGraphRequest();
+    _isProduction = defaultProvider is OpenGraphRequest;
     super.initState();
   }
 
@@ -105,107 +106,23 @@ class _OpenGraphPreviewState extends State<OpenGraphPreview> {
                             style: TextStyle(color: Colors.pink.shade200))));
               }
 
-              final data = snapshot.data as OpenGraphEntity;
-
-              if (data.title == "" &&
-                  data.description == "" &&
-                  data.image == "") {
-                return const SizedBox.shrink();
+              if (snapshot.data == null) {
+                var data = SalveObjects.notResults;
+                data.title = widget.error;
+                return WidgetOpenGraph(
+                    data: data,
+                    height: widget.height,
+                    isProduction: _isProduction,
+                    borderRadius: widget.borderRadius);
               }
 
-              return SizedBox(
+              final data = snapshot.data as OpenGraphEntity;
+
+              return WidgetOpenGraph(
+                data: data,
                 height: widget.height,
-                width: MediaQuery.of(context).size.width,
-                child: Stack(
-                  children: [
-                    if (data.image != "" && widget.provider == null)
-                      Image.network(data.image,
-                          fit: BoxFit.fitWidth,
-                          width: MediaQuery.of(context).size.width,
-                          height: widget.height),
-                    if (data.image != "") widget.childError,
-                    Positioned(
-                      bottom: 0.0,
-                      left: 0.0,
-                      right: 0.0,
-                      child: Padding(
-                        padding: EdgeInsets.all(widget.borderRadius / 2),
-                        child: ClipRRect(
-                          borderRadius:
-                              BorderRadius.circular(widget.borderRadius / 2),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                            child: Container(
-                              color: Colors.black.withOpacity(0.5),
-                              padding: const EdgeInsets.all(5.0),
-                              child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (data.title != "")
-                                      Text(data.title,
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis),
-                                    if (data.description != "")
-                                      Text(data.description,
-                                          style: const TextStyle(
-                                              color: Colors.white),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis),
-                                    Text(Uri.parse(data.url).host,
-                                        style: const TextStyle(
-                                            color: Colors.white54)),
-                                  ]),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Visibility(
-                      visible: widget.showReloadButton,
-                      child: Positioned(
-                        right: 0.0,
-                        top: 0.0,
-                        left: 0.0,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Card(
-                                color: Colors.black,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(4),
-                                  child: Text(widget.preview,
-                                      style:
-                                          const TextStyle(color: Colors.white)),
-                                )),
-                            Card(
-                              color: Colors.blue.shade700,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(4),
-                                child: GestureDetector(
-                                    onTap: () =>
-                                        defaultProvider.fetch(widget.url),
-                                    child: Text(widget.refresh,
-                                        style: const TextStyle(
-                                            color: Colors.white))),
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                    )
-                  ],
-                ),
+                isProduction: _isProduction,
+                borderRadius: widget.borderRadius,
               );
             }),
       ),
