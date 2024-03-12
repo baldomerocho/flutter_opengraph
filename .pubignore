@@ -1,1 +1,10 @@
-.fvm
+.fvm/
+ss/
+ios/
+android/
+web/
+windows/
+macos/
+linux/
+.gitignore
+.github/
