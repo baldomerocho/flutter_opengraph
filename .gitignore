@@ -30,3 +30,6 @@ migrate_working_dir/
 build/
 **.freezed.dart
 **.g.dart
+
+# FVM Version Cache
+.fvm/
