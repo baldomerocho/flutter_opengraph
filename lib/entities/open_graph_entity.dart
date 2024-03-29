@@ -15,15 +15,6 @@ part 'open_graph_entity.g.dart';
 /// - image: Site image, example: "http://ogp.me/logo.png"
 @freezed
 class OpenGraphEntity with _$OpenGraphEntity {
-  // OpenGraphEntity({
-  //   required this.title,
-  //   required this.description,
-  //   required this.locale,
-  //   required this.type,
-  //   required this.url,
-  //   required this.siteName,
-  //   required this.image,
-  // });
 
   factory OpenGraphEntity({
     required String title,
