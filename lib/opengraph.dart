@@ -109,7 +109,8 @@ class _OpenGraphPreviewState extends State<OpenGraphPreview> {
 
               if (snapshot.data == null) {
                 var data = SalveObjects.notResults;
-                data.title = widget.error;
+                data = data.copyWith(title: widget.error);
+
                 return WidgetOpenGraph(
                     data: data,
                     height: widget.height,

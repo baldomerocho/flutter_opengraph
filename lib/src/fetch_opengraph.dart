@@ -7,8 +7,7 @@ import 'package:opengraph/entities/open_graph_entity.dart';
 class OpenGraphConfiguration {
   final int maxObjects;
 
-  OpenGraphConfiguration(
-      {this.maxObjects = 1000});
+  OpenGraphConfiguration({this.maxObjects = 1000});
 
   @override
   String toString() {
@@ -43,7 +42,7 @@ class OpenGraphRequest implements OpenGraphRequestInterface {
   int _maxObjects = 1000;
 
   /// Credentials for the OpenGraph API
-  OpenGraphConfiguration? _credentials;
+  OpenGraphConfiguration? configuration;
 
   // Inicializa el proveedor con la URL
   @override
@@ -60,7 +59,7 @@ class OpenGraphRequest implements OpenGraphRequestInterface {
       final request = await httpClient.getUrl(Uri.parse(url));
       final response = await request.close();
       final responseBody = await response.transform(utf8.decoder).join();
-      final openGraph = await _obtainOpenGraph(responseBody,url);
+      final openGraph = await _obtainOpenGraph(responseBody, url);
       httpClient.close();
       overrideObjectOnList(openGraph, id);
       maxObjects();
@@ -77,11 +76,13 @@ class OpenGraphRequest implements OpenGraphRequestInterface {
     }
   }
 
-  Future<OpenGraphEntity> _obtainOpenGraph(String responseBody,String _path) async {
+  Future<OpenGraphEntity> _obtainOpenGraph(
+      String responseBody, String path) async {
     var document = parse(responseBody);
     // convierte todas las etiquetas <meta name="any"> a minuscúlas
     document.head?.querySelectorAll('meta[name]').forEach((element) {
-      element.attributes['name'] = element.attributes['name']?.toLowerCase() ?? '';
+      element.attributes['name'] =
+          element.attributes['name']?.toLowerCase() ?? '';
     });
     // obten la primera imagen que encuentre
     var img = document.head?.querySelector('img');
@@ -93,17 +94,23 @@ class OpenGraphRequest implements OpenGraphRequestInterface {
     var url = document.head?.querySelector('meta[property="og:url"]');
     var locale = document.head?.querySelector('meta[property="og:locale"]');
     var type = document.head?.querySelector('meta[property="og:type"]');
-    var siteName = document.head?.querySelector('meta[property="og:site_name"]');
+    var siteName =
+        document.head?.querySelector('meta[property="og:site_name"]');
 
     return OpenGraphEntity(
-        title: title?.attributes['content'] ?? document.head?.querySelector('title')?.text ?? '',
-        description: description?.attributes['content'] ?? document.head?.querySelector('meta[name="description"]')?.attributes['content'] ?? '',
+        title: title?.attributes['content'] ??
+            document.head?.querySelector('title')?.text ??
+            '',
+        description: description?.attributes['content'] ??
+            document.head
+                ?.querySelector('meta[name="description"]')
+                ?.attributes['content'] ??
+            '',
         image: image?.attributes['content'] ?? img?.attributes['src'] ?? '',
-        url: url?.attributes['content'] ?? _path,
+        url: url?.attributes['content'] ?? path,
         locale: locale?.attributes['content'] ?? '',
         type: type?.attributes['content'] ?? '',
         siteName: siteName?.attributes['content'] ?? '');
-
   }
 
   void overrideObjectOnList(OpenGraphEntity object, String id) =>
