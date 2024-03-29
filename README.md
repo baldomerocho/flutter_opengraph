@@ -1,4 +1,5 @@
 ### OpenGraph Preview Widget
+[![codecov](https://codecov.io/gh/baldomerocho/flutter_opengraph/graph/badge.svg?token=3I56EQ85DC)](https://codecov.io/gh/baldomerocho/flutter_opengraph)
 
 [![Crear Release](https://github.com/baldomerocho/flutter_opengraph/actions/workflows/release.yaml/badge.svg?branch=master)](https://github.com/baldomerocho/flutter_opengraph/actions/workflows/release.yaml)
 
