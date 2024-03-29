@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:opengraph/opengraph.dart';
 
 class OpenGraphProvider {
-  static OpenGraphCredentials CONFIG = OpenGraphCredentials(
-      url: "https://app.server.gt/api/opengraph/?site=",
-      token: "<TOKEN>",
+  static OpenGraphConfiguration CONFIG = OpenGraphConfiguration(
       maxObjects: 1000);
 }
 

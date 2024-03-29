@@ -5,10 +5,7 @@ import 'package:opengraph/opengraph.dart';
 import 'package:mockito/mockito.dart';
 import 'package:flutter/material.dart';
 
-final credentials = OpenGraphCredentials(
-    url: "http://provider",
-    token: "5f3e3e3e-3e3e-3e3e-3e3e-3e3e3e3e3e3e",
-    maxObjects: 1000);
+final credentials = OpenGraphConfiguration(maxObjects: 1000);
 
 class MockOpenGraphRequest extends Mock implements OpenGraphRequestInterface {
   MockOpenGraphRequest() {

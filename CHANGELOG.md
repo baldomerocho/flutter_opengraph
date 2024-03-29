@@ -39,3 +39,7 @@
 ## 0.0.14 (2024-03-11)
 
 * Update Documentation api
+
+## 0.0.15 (2024-03-11)
+
+* Add Screenshots example

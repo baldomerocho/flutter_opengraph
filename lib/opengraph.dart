@@ -5,6 +5,7 @@
 /// @Disc     : a dart and flutter package to fetch and preview OpenGraph data
 ///
 library opengraph;
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:opengraph/entities/open_graph_entity.dart';

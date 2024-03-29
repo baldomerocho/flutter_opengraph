@@ -1,19 +1,18 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:html/parser.dart';
 import 'package:opengraph/entities/open_graph_entity.dart';
 
-class OpenGraphCredentials {
-  final String url;
-  final String token;
+class OpenGraphConfiguration {
   final int maxObjects;
 
-  OpenGraphCredentials(
-      {required this.url, required this.token, this.maxObjects = 1000});
+  OpenGraphConfiguration(
+      {this.maxObjects = 1000});
 
   @override
   String toString() {
-    return "OpenGraphCredentials(url: $url, token: $token, maxObjects: $maxObjects)";
+    return "OpenGraphConfiguration(maxObjects: $maxObjects)";
   }
 }
 
@@ -23,7 +22,7 @@ abstract class OpenGraphRequestInterface {
   Future<OpenGraphEntity?> fetch(String url);
 
   /// Initializes the provider with the given credentials
-  void initProvider(OpenGraphCredentials credentials);
+  void initProvider(OpenGraphConfiguration configuration);
 }
 
 /// OpenGraphRequest is a singleton class that fetches OpenGraph data from the given URL
@@ -44,42 +43,67 @@ class OpenGraphRequest implements OpenGraphRequestInterface {
   int _maxObjects = 1000;
 
   /// Credentials for the OpenGraph API
-  OpenGraphCredentials? _credentials;
+  OpenGraphConfiguration? _credentials;
 
   // Inicializa el proveedor con la URL
   @override
-  void initProvider(OpenGraphCredentials credentials) {
-    _credentials = credentials;
-    _maxObjects = credentials.maxObjects;
+  void initProvider(OpenGraphConfiguration configuration) {
+    _maxObjects = configuration.maxObjects;
   }
 
   @override
   Future<OpenGraphEntity> fetch(String url) async {
-    url = _encodeBase64(url);
-    if (findObjectOnList(url).description != '') return findObjectOnList(url);
-    final String url0 = "${_credentials!.url}$url";
+    var id = _encodeBase64(url);
+    if (findObjectOnList(id).description != '') return findObjectOnList(id);
     final httpClient = HttpClient();
     try {
-      final request = await httpClient.getUrl(Uri.parse(url0));
-      request.headers.add(
-          HttpHeaders.authorizationHeader, "Bearer ${_credentials!.token}");
+      final request = await httpClient.getUrl(Uri.parse(url));
       final response = await request.close();
       final responseBody = await response.transform(utf8.decoder).join();
-      final json = jsonDecode(responseBody);
+      final openGraph = await _obtainOpenGraph(responseBody,url);
       httpClient.close();
-      overrideObjectOnList(OpenGraphEntity.fromJson(json), url);
+      overrideObjectOnList(openGraph, id);
       maxObjects();
-      return OpenGraphEntity.fromJson(json);
+      return openGraph;
     } catch (e) {
       return OpenGraphEntity(
           title: '',
           description: '',
           image: '',
-          url: _decodeBase64(url),
+          url: _decodeBase64(id),
           locale: 'en_US',
           type: 'website',
           siteName: '');
     }
+  }
+
+  Future<OpenGraphEntity> _obtainOpenGraph(String responseBody,String _path) async {
+    var document = parse(responseBody);
+    // convierte todas las etiquetas <meta name="any"> a minuscúlas
+    document.head?.querySelectorAll('meta[name]').forEach((element) {
+      element.attributes['name'] = element.attributes['name']?.toLowerCase() ?? '';
+    });
+    // obten la primera imagen que encuentre
+    var img = document.head?.querySelector('img');
+
+    var title = document.head?.querySelector('meta[property="og:title"]');
+    var description =
+        document.head?.querySelector('meta[property="og:description"]');
+    var image = document.head?.querySelector('meta[property="og:image"]');
+    var url = document.head?.querySelector('meta[property="og:url"]');
+    var locale = document.head?.querySelector('meta[property="og:locale"]');
+    var type = document.head?.querySelector('meta[property="og:type"]');
+    var siteName = document.head?.querySelector('meta[property="og:site_name"]');
+
+    return OpenGraphEntity(
+        title: title?.attributes['content'] ?? document.head?.querySelector('title')?.text ?? '',
+        description: description?.attributes['content'] ?? document.head?.querySelector('meta[name="description"]')?.attributes['content'] ?? '',
+        image: image?.attributes['content'] ?? img?.attributes['src'] ?? '',
+        url: url?.attributes['content'] ?? _path,
+        locale: locale?.attributes['content'] ?? '',
+        type: type?.attributes['content'] ?? '',
+        siteName: siteName?.attributes['content'] ?? '');
+
   }
 
   void overrideObjectOnList(OpenGraphEntity object, String id) =>
