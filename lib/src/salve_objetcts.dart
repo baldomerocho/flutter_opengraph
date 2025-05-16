@@ -1,4 +1,4 @@
-import 'package:opengraph/entities/open_graph_entity.dart';
+import 'package:opengraph/src/models/open_graph_entity.dart';
 
 /// SalveObjects class
 /// This class is a helper to create a default OpenGraphEntity object

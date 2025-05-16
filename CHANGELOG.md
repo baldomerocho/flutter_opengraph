@@ -43,3 +43,13 @@
 ## 0.0.15 (2024-03-11)
 
 * Add Screenshots example
+
+## 0.1.0 (2024-03-29)
+* Add http dependency, and remove http request to server
+
+## 0.2.0 (2025-05-15)
+* Migrated code from old structure while maintaining compatibility
+* Added new `OpengraphPreview` widget to replace `OpenGraphPreview`
+* Added `opengraph_fetch` function for direct metadata extraction
+* Created adapter between old and new metadata structures
+* Updated documentation and examples

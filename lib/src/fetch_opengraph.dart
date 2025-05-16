@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:html/parser.dart';
-import 'package:opengraph/entities/open_graph_entity.dart';
+import 'package:opengraph/src/models/open_graph_entity.dart';
 
 class OpenGraphConfiguration {
   final int maxObjects;

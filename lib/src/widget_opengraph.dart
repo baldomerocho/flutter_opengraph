@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:opengraph/entities/open_graph_entity.dart';
+import 'package:opengraph/src/models/open_graph_entity.dart';
 
 /// WidgetOpenGraph Widget
 /// Internal widget to show the OpenGraphEntity data

@@ -1,4 +1,3 @@
-.fvm/
 ss/
 ios/
 android/
@@ -6,5 +5,9 @@ web/
 windows/
 macos/
 linux/
-.gitignore
 .github/
+coverage/
+build/
+.fvm/
+.fvm/flutter_sdk
+.fvmrc
