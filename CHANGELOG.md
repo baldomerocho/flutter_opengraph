@@ -1,3 +1,14 @@
+## 1.1.0 (2026-06-06)
+* Added in-memory cache (`OpengraphCache`) for `opengraph_fetch`: repeated calls for the same URL no longer refetch, and concurrent requests are deduplicated (#1)
+* `OpengraphPreview` memoizes its fetch: rebuilds inside scrollable lists no longer trigger new network requests (#1)
+* Support `data:` URI images (base64) rendered with `Image.memory`; broken image URLs now fall back gracefully instead of crashing (#3)
+* New `hideOnError` option to render nothing when the fetch fails (#2)
+* `childError`, `childPreview`, `showReloadButton` and `refresh` are now functional: custom error widget, custom loading widget and a retry button that invalidates the cache (#2)
+* New `fallbackImage` option to replace the default image when there is no og:image (#2)
+* New `enableBlur` option to disable the expensive `BackdropFilter` in long lists (#2)
+* Network images are decoded at display size (`cacheWidth`) to reduce jank while scrolling (#2)
+* Configurable request timeout (`OpengraphFetch.timeout`, default 10s) and request headers/User-Agent (`OpengraphFetch.requestHeaders`)
+
 ## 1.0.0 (2025-05-15)
 * Migrated code from old structure while maintaining compatibility
 * Added new `OpengraphPreview` widget to replace `OpenGraphPreview`

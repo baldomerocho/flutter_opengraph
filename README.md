@@ -111,10 +111,40 @@ The `OpengraphPreview` widget supports the following customization options:
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `url` | String | The URL to fetch OpenGraph data from (required) |
-| `height` | double | Height of the preview card (default: 150) |
-| `borderRadius` | double | Radius for the card corners (default: 8) |
-| `backgroundColor` | Color | Background color of the card (default: white) |
-| `progressColor` | Color | Color of the loading indicator (default: grey) |
+| `height` | double | Height of the preview card (default: 200) |
+| `borderRadius` | double | Radius for the card corners (default: 10) |
+| `backgroundColor` | Color | Background color of the card (default: black87) |
+| `progressColor` | Color | Color of the loading indicator (default: white54) |
+| `hideOnError` | bool | Render nothing when the fetch fails (default: false) |
+| `childError` | Widget? | Custom widget shown when the fetch fails, replaces the whole card |
+| `childPreview` | Widget? | Custom widget shown while loading, instead of the progress indicator |
+| `showReloadButton` | bool | Show a retry button on error that invalidates the cache (default: false) |
+| `refresh` | String | Label of the retry button (default: "Refresh") |
+| `error` | String | Message shown when the fetch fails |
+| `fallbackImage` | Widget? | Custom widget shown when the page has no og:image, instead of the default image |
+| `enableBlur` | bool | Blur effect behind the text overlay; disable in long lists for better performance (default: true) |
+
+#### Caching
+
+Fetched URLs are cached in memory, so scrolling through lists does not refetch. You can tune or bypass it:
+
+```dart
+OpengraphCache.maxEntries = 500;          // default: 200
+OpengraphCache.evict("https://a.com");    // drop a single URL
+OpengraphCache.clear();                   // drop everything
+OpengraphCache.enabled = false;           // disable caching entirely
+```
+
+Network failures are not cached, so transient errors recover on the next attempt.
+
+#### Network tuning
+
+```dart
+OpengraphFetch.timeout = const Duration(seconds: 5);
+OpengraphFetch.requestHeaders = {
+  'User-Agent': 'MyApp/1.0',
+};
+```
 
 #### Styling Examples
 
