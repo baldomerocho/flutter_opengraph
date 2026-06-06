@@ -88,7 +88,12 @@ void main() {
           .pumpWidget(_wrap(_entity(image: 'https://example.com/image.png')));
 
       final image = tester.widget<Image>(find.byType(Image));
-      expect(image.image, isA<NetworkImage>());
+      // cacheWidth wraps the provider in a ResizeImage to decode at
+      // display size; the underlying provider must be a NetworkImage.
+      final provider = image.image;
+      final unwrapped =
+          provider is ResizeImage ? provider.imageProvider : provider;
+      expect(unwrapped, isA<NetworkImage>());
       // A broken network image must not crash the widget: the errorBuilder
       // swaps in the fallback. (flutter_test's HttpClient always returns 400.)
       await tester.pump();

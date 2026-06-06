@@ -7,10 +7,23 @@ import 'package:opengraph/src/utils/util.dart';
 import 'package:string_validator/string_validator.dart' as validator;
 
 class OpengraphFetch {
+  /// Maximum time to wait for the page before giving up, so a slow URL does
+  /// not keep a preview spinner hanging forever.
+  static Duration timeout = const Duration(seconds: 10);
+
+  /// Headers sent with every request. Some sites only serve metadata to
+  /// known crawlers or block Dart's default user agent; override this if
+  /// you need different headers.
+  static Map<String, String> requestHeaders = {
+    'User-Agent':
+        'Mozilla/5.0 (compatible; FlutterOpengraph; +https://github.com/baldomerocho/flutter_opengraph)',
+    'Accept': 'text/html,application/xhtml+xml,*/*',
+  };
+
   /// Fetches a [url], validates it, and returns [OpengraphMetadata].
   ///
-  /// On fetch errors (network failure, non-200 response) it returns a
-  /// fallback metadata built from the URL. Pass [throwOnError] to propagate
+  /// On fetch errors (network failure, timeout, non-200 response) it returns
+  /// a fallback metadata built from the URL. Pass [throwOnError] to propagate
   /// those errors to the caller instead.
   static Future<OpengraphMetadata?> extract(String url,
       {bool throwOnError = false}) async {
@@ -28,7 +41,9 @@ class OpengraphFetch {
 
     // Make our network call
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await http
+          .get(Uri.parse(url), headers: requestHeaders)
+          .timeout(timeout);
       final headerContentType = response.headers['content-type'];
 
       if (headerContentType != null &&
