@@ -8,7 +8,12 @@ import 'package:string_validator/string_validator.dart' as validator;
 
 class OpengraphFetch {
   /// Fetches a [url], validates it, and returns [OpengraphMetadata].
-  static Future<OpengraphMetadata?> extract(String url) async {
+  ///
+  /// On fetch errors (network failure, non-200 response) it returns a
+  /// fallback metadata built from the URL. Pass [throwOnError] to propagate
+  /// those errors to the caller instead.
+  static Future<OpengraphMetadata?> extract(String url,
+      {bool throwOnError = false}) async {
     if (!validator.isURL(url)) {
       return null;
     }
@@ -37,6 +42,10 @@ class OpengraphFetch {
       final document = responseToDocument(response);
 
       if (document == null) {
+        if (throwOnError) {
+          throw http.ClientException(
+              'Failed to fetch $url: HTTP ${response.statusCode}');
+        }
         return defaultOutput;
       }
 
@@ -47,6 +56,7 @@ class OpengraphFetch {
 
       return data;
     } catch (e) {
+      if (throwOnError) rethrow;
       return defaultOutput;
     }
   }

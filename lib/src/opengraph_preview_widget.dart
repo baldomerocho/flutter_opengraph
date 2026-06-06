@@ -39,6 +39,24 @@ class OpengraphPreview extends StatefulWidget {
 }
 
 class _OpengraphPreviewState extends State<OpengraphPreview> {
+  /// Memoized future: created once per URL instead of on every build, so
+  /// rebuilds (e.g. scrolling inside lists) do not trigger new fetches.
+  late Future<OpenGraphEntity?> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = opengraph_fetch(widget.url);
+  }
+
+  @override
+  void didUpdateWidget(OpengraphPreview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.url != widget.url) {
+      _future = opengraph_fetch(widget.url);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -50,7 +68,7 @@ class _OpengraphPreviewState extends State<OpengraphPreview> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(widget.borderRadius),
         child: FutureBuilder<OpenGraphEntity?>(
-          future: opengraph_fetch(widget.url),
+          future: _future,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Container(
