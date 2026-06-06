@@ -1,3 +1,10 @@
+## 1.0.0 (2025-05-15)
+* Migrated code from old structure while maintaining compatibility
+* Added new `OpengraphPreview` widget to replace `OpenGraphPreview`
+* Added `opengraph_fetch` function for direct metadata extraction
+* Created adapter between old and new metadata structures
+* Updated documentation and examples
+
 ## 0.0.1 (2021-07-01)
 
 * First release
@@ -46,10 +53,3 @@
 
 ## 0.1.0 (2024-03-29)
 * Add http dependency, and remove http request to server
-
-## 0.2.0 (2025-05-15)
-* Migrated code from old structure while maintaining compatibility
-* Added new `OpengraphPreview` widget to replace `OpenGraphPreview`
-* Added `opengraph_fetch` function for direct metadata extraction
-* Created adapter between old and new metadata structures
-* Updated documentation and examples
