@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -45,6 +46,55 @@ class WidgetOpenGraph extends StatelessWidget {
     required this.borderRadius,
   });
 
+  /// Default image shown when there is no og:image or it fails to load.
+  Widget _fallbackImage(BuildContext context) {
+    return Image.asset(
+      "assets/notfound.jpeg",
+      package: 'opengraph',
+      width: MediaQuery.of(context).size.width,
+      height: height,
+      fit: BoxFit.fitWidth,
+    );
+  }
+
+  /// Builds the preview image supporting http(s) urls and `data:` URIs.
+  ///
+  /// `data:image/...;base64,...` images are decoded with [Image.memory]
+  /// because [Image.network] throws "No host specified" for them. Broken
+  /// urls fall back to the default image instead of crashing.
+  Widget _buildImage(BuildContext context) {
+    final image = data.image;
+    final width = MediaQuery.of(context).size.width;
+
+    if (image.isEmpty) return _fallbackImage(context);
+
+    if (image.startsWith('data:')) {
+      Uint8List? bytes;
+      try {
+        bytes = Uri.parse(image).data?.contentAsBytes();
+      } catch (_) {
+        bytes = null;
+      }
+      if (bytes == null || bytes.isEmpty) return _fallbackImage(context);
+      return Image.memory(
+        bytes,
+        fit: BoxFit.fitWidth,
+        width: width,
+        height: height,
+        errorBuilder: (context, error, stackTrace) =>
+            _fallbackImage(context),
+      );
+    }
+
+    return Image.network(
+      image,
+      fit: BoxFit.fitWidth,
+      width: width,
+      height: height,
+      errorBuilder: (context, error, stackTrace) => _fallbackImage(context),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -52,19 +102,7 @@ class WidgetOpenGraph extends StatelessWidget {
       width: MediaQuery.of(context).size.width,
       child: Stack(
         children: [
-          if (isProduction)
-            data.image.isNotEmpty
-                ? Image.network(data.image,
-                    fit: BoxFit.fitWidth,
-                    width: MediaQuery.of(context).size.width,
-                    height: height)
-                : Image.asset(
-                    "assets/notfound.jpeg",
-                    package: 'opengraph',
-                    width: MediaQuery.of(context).size.width,
-                    height: height,
-                    fit: BoxFit.fitWidth,
-                  ),
+          if (isProduction) _buildImage(context),
           Positioned(
             bottom: 0.0,
             left: 0.0,
