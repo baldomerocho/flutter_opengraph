@@ -13,7 +13,7 @@ void main() {
     test('opengraph_fetch handles invalid URLs', () async {
       // Llamar a la función con una URL inválida
       final result = await opengraph_fetch('invalid-url');
-      
+
       // La implementación actual puede devolver null para URLs inválidas
       // o una entidad con valores por defecto, dependiendo de la implementación
       if (result != null) {
@@ -21,7 +21,7 @@ void main() {
       }
     });
   });
-  
+
   group('OpengraphFetch', () {
     test('responseToDocument handles valid HTML', () {
       // Preparar una respuesta HTML válida
@@ -35,29 +35,29 @@ void main() {
         </body>
       </html>
       ''';
-      
+
       final response = http.Response(htmlResponse, 200);
-      
+
       // Llamar al método que queremos probar
       final document = OpengraphFetch.responseToDocument(response);
-      
+
       // Verificar que el método analiza el HTML correctamente
       expect(document, isNotNull);
       expect(document!.querySelector('title')?.text, 'Test Page');
       expect(document.querySelector('h1')?.text, 'Hello, World!');
     });
-    
+
     test('responseToDocument handles non-200 status codes', () {
       final response = http.Response('', 404);
-      
+
       // Llamar al método que queremos probar
       final document = OpengraphFetch.responseToDocument(response);
-      
+
       // Verificar que el método devuelve null para respuestas con error
       expect(document, isNull);
     });
   });
-  
+
   group('OpengraphMetadataAdapter', () {
     test('toOpenGraphEntity converts OpengraphMetadata to OpenGraphEntity', () {
       // Crear un objeto OpengraphMetadata
@@ -69,10 +69,10 @@ void main() {
         ..locale = 'en_US'
         ..type = 'website'
         ..siteName = 'Test Site';
-      
+
       // Llamar al método que queremos probar
       final entity = OpengraphMetadataAdapter.toOpenGraphEntity(metadata);
-      
+
       // Verificar que el método convierte correctamente
       expect(entity.title, metadata.title);
       expect(entity.description, metadata.description);
@@ -82,8 +82,9 @@ void main() {
       expect(entity.type, metadata.type);
       expect(entity.siteName, metadata.siteName);
     });
-    
-    test('fromOpenGraphEntity converts OpenGraphEntity to OpengraphMetadata', () {
+
+    test('fromOpenGraphEntity converts OpenGraphEntity to OpengraphMetadata',
+        () {
       // Crear un objeto OpenGraphEntity
       final entity = OpenGraphEntity(
         title: 'Test Title',
@@ -94,10 +95,10 @@ void main() {
         type: 'website',
         siteName: 'Test Site',
       );
-      
+
       // Llamar al método que queremos probar
       final metadata = OpengraphMetadataAdapter.fromOpenGraphEntity(entity);
-      
+
       // Verificar que el método convierte correctamente
       expect(metadata.title, entity.title);
       expect(metadata.description, entity.description);
@@ -107,14 +108,14 @@ void main() {
       expect(metadata.type, entity.type);
       expect(metadata.siteName, entity.siteName);
     });
-    
+
     test('toOpenGraphEntity handles null values', () {
       // Crear un objeto OpengraphMetadata con valores nulos
       final metadata = OpengraphMetadata();
-      
+
       // Llamar al método que queremos probar
       final entity = OpengraphMetadataAdapter.toOpenGraphEntity(metadata);
-      
+
       // Verificar que el método maneja los valores nulos correctamente
       // Los valores por defecto pueden variar según la implementación
       expect(entity.title, isNotNull);

@@ -14,6 +14,18 @@ OpenGraphEntity _entity({String image = ''}) {
   );
 }
 
+OpenGraphEntity _entityWith(String title) {
+  return OpenGraphEntity(
+    title: title,
+    description: 'Description',
+    image: '',
+    url: 'https://example.com',
+    locale: 'en_US',
+    type: 'website',
+    siteName: 'Example',
+  );
+}
+
 Widget _app(Widget child) {
   return MaterialApp(home: Scaffold(body: child));
 }
@@ -73,6 +85,32 @@ void main() {
       await tester.tap(find.text('Try again'));
       await tester.pumpAndSettle();
       expect(find.text('Try again'), findsOneWidget);
+    });
+  });
+
+  group('OpengraphPreview url updates', () {
+    testWidgets('changing the url triggers a new fetch (didUpdateWidget)',
+        (WidgetTester tester) async {
+      OpengraphCache.put('https://a.example.com', _entityWith('Title A'));
+      OpengraphCache.put('https://b.example.com', _entityWith('Title B'));
+
+      // Non-const on purpose: also exercises the constructor at runtime
+      // ignore: prefer_const_constructors
+      await tester.pumpWidget(_app(OpengraphPreview(
+        url: 'https://a.example.com',
+      )));
+      await tester.pump();
+      expect(find.text('Title A'), findsOneWidget);
+
+      // Same widget position with a different url → didUpdateWidget path
+      // ignore: prefer_const_constructors
+      await tester.pumpWidget(_app(OpengraphPreview(
+        url: 'https://b.example.com',
+      )));
+      await tester.pump();
+
+      expect(find.text('Title B'), findsOneWidget);
+      expect(find.text('Title A'), findsNothing);
     });
   });
 

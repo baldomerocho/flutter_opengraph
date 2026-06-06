@@ -82,6 +82,35 @@ void main() {
       expect(image.image, isA<AssetImage>());
     });
 
+    testWidgets(
+        'data: URI with bytes that are not a decodable image falls back '
+        'via errorBuilder', (WidgetTester tester) async {
+      // Valid base64 ("ABCD") but not an image: decoding fails async and
+      // the errorBuilder must swap in the fallback without crashing.
+      const notAnImage = 'data:application/octet-stream;base64,QUJDRA==';
+
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: WidgetOpenGraph(
+            data: _entity(image: notAnImage),
+            height: 200,
+            isProduction: true,
+            borderRadius: 10,
+            fallbackImage: const Text('DECODE FAILED'),
+          ),
+        ),
+      ));
+      await tester.pump();
+
+      // Let the async decode fail outside the fake-async zone
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 100)));
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('DECODE FAILED'), findsOneWidget);
+    });
+
     testWidgets('network images keep using Image.network',
         (WidgetTester tester) async {
       await tester

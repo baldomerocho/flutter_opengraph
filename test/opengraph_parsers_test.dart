@@ -4,16 +4,17 @@ import 'package:html/parser.dart' as html_parser;
 
 void main() {
   group('OpengraphMetadata', () {
-    test('hasAllMetadata returns true when all required fields are present', () {
+    test('hasAllMetadata returns true when all required fields are present',
+        () {
       final metadata = OpengraphMetadata()
         ..title = 'Test Title'
         ..description = 'Test Description'
         ..image = 'https://example.com/image.jpg'
         ..url = 'https://example.com';
-      
+
       expect(metadata.hasAllMetadata, isTrue);
     });
-    
+
     test('hasAllMetadata returns false when any required field is missing', () {
       // Missing title
       final metadata1 = OpengraphMetadata()
@@ -21,21 +22,21 @@ void main() {
         ..image = 'https://example.com/image.jpg'
         ..url = 'https://example.com';
       expect(metadata1.hasAllMetadata, isFalse);
-      
+
       // Missing description
       final metadata2 = OpengraphMetadata()
         ..title = 'Test Title'
         ..image = 'https://example.com/image.jpg'
         ..url = 'https://example.com';
       expect(metadata2.hasAllMetadata, isFalse);
-      
+
       // Missing image
       final metadata3 = OpengraphMetadata()
         ..title = 'Test Title'
         ..description = 'Test Description'
         ..url = 'https://example.com';
       expect(metadata3.hasAllMetadata, isFalse);
-      
+
       // Missing url
       final metadata4 = OpengraphMetadata()
         ..title = 'Test Title'
@@ -43,7 +44,7 @@ void main() {
         ..image = 'https://example.com/image.jpg';
       expect(metadata4.hasAllMetadata, isFalse);
     });
-    
+
     test('toMap returns a map with all metadata fields', () {
       final metadata = OpengraphMetadata()
         ..title = 'Test Title'
@@ -53,9 +54,9 @@ void main() {
         ..locale = 'en_US'
         ..type = 'website'
         ..siteName = 'Test Site';
-      
+
       final map = metadata.toMap();
-      
+
       expect(map['title'], 'Test Title');
       expect(map['description'], 'Test Description');
       expect(map['image'], 'https://example.com/image.jpg');
@@ -64,19 +65,19 @@ void main() {
       expect(map['type'], 'website');
       expect(map['siteName'], 'Test Site');
     });
-    
+
     test('toJson returns the same as toMap', () {
       final metadata = OpengraphMetadata()
         ..title = 'Test Title'
         ..description = 'Test Description'
         ..image = 'https://example.com/image.jpg';
-      
+
       final map = metadata.toMap();
       final json = metadata.toJson();
-      
+
       expect(json, equals(map));
     });
-    
+
     test('fromJson creates OpengraphMetadata from JSON', () {
       final json = {
         'title': 'Test Title',
@@ -87,9 +88,9 @@ void main() {
         'type': 'website',
         'siteName': 'Test Site'
       };
-      
+
       final metadata = OpengraphMetadata.fromJson(json);
-      
+
       expect(metadata.title, 'Test Title');
       expect(metadata.description, 'Test Description');
       expect(metadata.image, 'https://example.com/image.jpg');
@@ -98,7 +99,7 @@ void main() {
       expect(metadata.type, 'website');
       expect(metadata.siteName, 'Test Site');
     });
-    
+
     test('parse method creates OpengraphMetadata with correct values', () {
       final parser = OpengraphMetadata()
         ..title = 'Test Title'
@@ -108,9 +109,9 @@ void main() {
         ..locale = 'en_US'
         ..type = 'website'
         ..siteName = 'Test Site';
-      
+
       final metadata = parser.parse();
-      
+
       expect(metadata.title, 'Test Title');
       expect(metadata.description, 'Test Description');
       expect(metadata.image, 'https://example.com/image.jpg');
@@ -120,7 +121,7 @@ void main() {
       expect(metadata.siteName, 'Test Site');
     });
   });
-  
+
   group('Parsers', () {
     test('OpenGraph parser extracts metadata correctly', () {
       const htmlString = '''
@@ -137,10 +138,10 @@ void main() {
         <body></body>
       </html>
       ''';
-      
+
       final document = html_parser.parse(htmlString);
       final parser = OpengraphMetadataParser.openGraph(document);
-      
+
       expect(parser.title, 'OG Title');
       expect(parser.description, 'OG Description');
       expect(parser.image, 'https://example.com/og-image.jpg');
@@ -149,7 +150,7 @@ void main() {
       expect(parser.type, 'website');
       expect(parser.siteName, 'OG Site');
     });
-    
+
     test('Twitter Card parser extracts metadata correctly', () {
       const htmlString = '''
       <html>
@@ -163,10 +164,10 @@ void main() {
         <body></body>
       </html>
       ''';
-      
+
       final document = html_parser.parse(htmlString);
       final parser = OpengraphMetadataParser.twitterCard(document);
-      
+
       expect(parser.title, 'Twitter Title');
       expect(parser.description, 'Twitter Description');
       expect(parser.image, 'https://example.com/twitter-image.jpg');
@@ -176,7 +177,7 @@ void main() {
       expect(parser.locale, 'en_US'); // Default value
       expect(parser.type, 'website'); // Default value
     });
-    
+
     test('HTML Meta parser extracts metadata correctly', () {
       const htmlString = '''
       <html>
@@ -189,17 +190,17 @@ void main() {
         </body>
       </html>
       ''';
-      
+
       final document = html_parser.parse(htmlString);
       final parser = OpengraphMetadataParser.htmlMeta(document);
-      
+
       expect(parser.title, 'HTML Title');
       expect(parser.description, 'HTML Description');
       expect(parser.image, 'https://example.com/html-image.jpg');
       expect(parser.locale, 'en_US'); // Default value
       expect(parser.type, 'website'); // Default value
     });
-    
+
     test('JSON-LD parser extracts metadata correctly', () {
       const htmlString = '''
       <html>
@@ -222,10 +223,10 @@ void main() {
         <body></body>
       </html>
       ''';
-      
+
       final document = html_parser.parse(htmlString);
       final parser = OpengraphMetadataParser.jsonLdSchema(document);
-      
+
       expect(parser.title, 'JSON-LD Title');
       expect(parser.description, 'JSON-LD Description');
       expect(parser.image, 'https://example.com/jsonld-image.jpg');
@@ -233,7 +234,7 @@ void main() {
       expect(parser.siteName, 'JSON-LD Site');
       expect(parser.type, 'Article');
     });
-    
+
     test('OpengraphMetadataParser.parse combines results from all parsers', () {
       const htmlString = '''
       <html>
@@ -248,16 +249,19 @@ void main() {
         </body>
       </html>
       ''';
-      
+
       final document = html_parser.parse(htmlString);
-      final metadata = OpengraphMetadataParser.parse(document, url: 'https://example.com');
-      
+      final metadata =
+          OpengraphMetadataParser.parse(document, url: 'https://example.com');
+
       // Verify that metadata was combined from different parsers
       expect(metadata.title, 'OG Title'); // From OpenGraph parser
-      expect(metadata.description, 'Twitter Description'); // From Twitter parser
-      expect(metadata.image, 'https://example.com/html-image.jpg'); // From HTML parser
+      expect(
+          metadata.description, 'Twitter Description'); // From Twitter parser
+      expect(metadata.image,
+          'https://example.com/html-image.jpg'); // From HTML parser
     });
-    
+
     test('parse resolves relative image URLs', () {
       const htmlString = '''
       <html>
@@ -267,19 +271,20 @@ void main() {
         <body></body>
       </html>
       ''';
-      
+
       final document = html_parser.parse(htmlString);
-      final metadata = OpengraphMetadataParser.parse(document, url: 'https://example.com');
-      
+      final metadata =
+          OpengraphMetadataParser.parse(document, url: 'https://example.com');
+
       // Verify relative URL was resolved
       expect(metadata.image, 'https://example.com/relative-image.jpg');
     });
-    
+
     test('parse handles missing data gracefully', () {
       const htmlString = '<html><head></head><body></body></html>';
       final document = html_parser.parse(htmlString);
       final metadata = OpengraphMetadataParser.parse(document);
-      
+
       // Verify that no errors are thrown and fields are null
       expect(metadata, isNotNull);
       expect(metadata.title, isNull);
