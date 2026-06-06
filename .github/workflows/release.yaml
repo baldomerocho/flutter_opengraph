@@ -1,4 +1,4 @@
-name: Flutter Test And Publish pub.dev
+name: Tests & Coverage
 
 on:
   push:
@@ -13,20 +13,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.3'
+          channel: stable
+          cache: true
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Generate build runner
-        run: flutter pub run build_runner build -d
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
 
       - name: Run tests
         run: flutter test --coverage
