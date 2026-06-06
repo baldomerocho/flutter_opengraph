@@ -4,7 +4,7 @@ import 'package:opengraph/src/utils/util.dart';
 import 'base_parser.dart';
 import 'opengraph_parser.dart';
 
-/// Takes a [Document] and parses [OpengraphMetadata] from [<meta property='twitter:*'>] tags
+/// Takes a [Document] and parses [OpengraphMetadata] from `<meta property='twitter:*'>` tags
 class TwitterCardParser with BaseOpengraphParser {
   final Document? _document;
   TwitterCardParser(this._document);
@@ -48,7 +48,7 @@ class TwitterCardParser with BaseOpengraphParser {
         property: 'twitter:image',
       );
 
-  /// Twitter Cards do not have a url property so get the url from [og:url], if available.
+  /// Twitter Cards do not have a url property so get the url from `og:url`, if available.
   @override
   String? get url => OpengraphParser(_document).url;
 

@@ -1,4 +1,4 @@
-/// The base class for implementing a parser
+// The base class for implementing a parser
 
 mixin OpengraphKeys {
   static const keyTitle = 'title';

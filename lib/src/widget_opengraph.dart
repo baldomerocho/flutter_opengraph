@@ -100,8 +100,7 @@ class WidgetOpenGraph extends StatelessWidget {
         fit: BoxFit.fitWidth,
         width: width,
         height: height,
-        errorBuilder: (context, error, stackTrace) =>
-            _fallbackImage(context),
+        errorBuilder: (context, error, stackTrace) => _fallbackImage(context),
       );
     }
 

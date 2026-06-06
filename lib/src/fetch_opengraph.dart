@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:html/parser.dart';
+import 'package:http/http.dart' as http;
 import 'package:opengraph/src/models/open_graph_entity.dart';
 
 class OpenGraphConfiguration {
@@ -35,6 +35,10 @@ class OpenGraphRequest implements OpenGraphRequestInterface {
   /// Internal constructor
   OpenGraphRequest._internal();
 
+  /// HTTP client used for requests. Replaceable, e.g. with a MockClient
+  /// from `package:http/testing.dart` in tests.
+  http.Client client = http.Client();
+
   /// Save temporal data of the fetched URLs
   Map<String, OpenGraphEntity> urls = {};
 
@@ -54,13 +58,10 @@ class OpenGraphRequest implements OpenGraphRequestInterface {
   Future<OpenGraphEntity> fetch(String url) async {
     var id = _encodeBase64(url);
     if (findObjectOnList(id).description != '') return findObjectOnList(id);
-    final httpClient = HttpClient();
     try {
-      final request = await httpClient.getUrl(Uri.parse(url));
-      final response = await request.close();
-      final responseBody = await response.transform(utf8.decoder).join();
+      final response = await client.get(Uri.parse(url));
+      final responseBody = utf8.decode(response.bodyBytes);
       final openGraph = await _obtainOpenGraph(responseBody, url);
-      httpClient.close();
       overrideObjectOnList(openGraph, id);
       maxObjects();
       return openGraph;
@@ -137,10 +138,10 @@ class OpenGraphRequest implements OpenGraphRequestInterface {
   }
 }
 
-String _encodeBase64(string) {
+String _encodeBase64(String string) {
   return base64.encode(utf8.encode(string));
 }
 
-String _decodeBase64(string) {
+String _decodeBase64(String string) {
   return utf8.decode(base64.decode(string));
 }

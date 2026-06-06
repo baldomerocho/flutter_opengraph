@@ -3,7 +3,7 @@ import 'package:opengraph/src/utils/util.dart';
 
 import 'base_parser.dart';
 
-/// Takes a [Document] and parses [OpengraphMetadata] from [<meta property='og:*'>] tags
+/// Takes a [Document] and parses [OpengraphMetadata] from `<meta property='og:*'>` tags
 class OpengraphParser with BaseOpengraphParser {
   final Document? _document;
   OpengraphParser(this._document);
