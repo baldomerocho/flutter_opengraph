@@ -36,3 +36,4 @@ ios/
 android/
 macos/
 coverage/html/
+/doc/

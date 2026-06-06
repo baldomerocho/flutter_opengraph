@@ -1,4 +1,3 @@
-ss/
 ios/
 android/
 web/
@@ -8,6 +7,7 @@ linux/
 .github/
 coverage/
 build/
+doc/
 .fvm/
 .fvm/flutter_sdk
 .fvmrc
