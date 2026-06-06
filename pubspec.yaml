@@ -1,10 +1,18 @@
 name: opengraph
-description: A comprehensive Flutter package for OpenGraph integration with dual functionality - extract metadata from URLs (opengraph_fetch) and display beautiful link previews (OpengraphPreview widget). Supports OpenGraph, Twitter Cards, HTML meta tags, and JSON-LD formats.
-version: 1.1.0
+description: Fetch and parse OpenGraph, Twitter Card, HTML meta and JSON-LD metadata from any URL, with a customizable cached link preview widget.
+version: 1.2.0
 homepage: https://datogedon.com
-license: MIT
 repository: https://github.com/baldomerocho/flutter_opengraph
 issue_tracker: https://github.com/baldomerocho/flutter_opengraph/issues
+topics:
+  - opengraph
+  - link-preview
+  - metadata
+  - twitter-card
+  - widget
+screenshots:
+  - description: OpengraphPreview widget rendering link previews fetched from URLs
+    path: ss/preview.png
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

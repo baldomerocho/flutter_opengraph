@@ -1,3 +1,12 @@
+## 1.2.0 (2026-06-06)
+* **Web support**: migrated the legacy `OpenGraphRequest` from `dart:io` to `package:http` — the package now supports all 6 platforms (Android, iOS, Web, Windows, macOS, Linux)
+* `OpenGraphRequest.client` is now injectable for testing (e.g. with `MockClient` from `package:http/testing.dart`)
+* Test coverage raised from 90.3% to 99.6% (98 tests)
+* pub.dev score: fixed all static analysis findings, shortened package description, added topics and screenshots metadata (160/160 pana points)
+* README: badges, simplified setup docs (no initialization required), updated best practices
+* Example app: new "Options" tab showcasing `hideOnError`, `childError`, `showReloadButton`, `fallbackImage`, `enableBlur` and list usage
+* Removed dead code (`SalveObjects`)
+
 ## 1.1.0 (2026-06-06)
 * Added in-memory cache (`OpengraphCache`) for `opengraph_fetch`: repeated calls for the same URL no longer refetch, and concurrent requests are deduplicated (#1)
 * `OpengraphPreview` memoizes its fetch: rebuilds inside scrollable lists no longer trigger new network requests (#1)

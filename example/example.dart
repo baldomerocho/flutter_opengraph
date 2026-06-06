@@ -1,19 +1,14 @@
-// ignore_for_file: non_constant_identifier_names
-
 import 'package:flutter/material.dart';
 import 'package:opengraph/opengraph.dart';
 
-// Example showing both the preview and fetch functionality
+// Example showing the preview widget, its customization options and the
+// fetch functionality. No initialization is required: results are cached
+// in memory automatically (see OpengraphCache to tune it).
 
-class OpenGraphProvider {
-  static OpenGraphConfiguration CONFIG =
-      OpenGraphConfiguration(maxObjects: 1000);
-}
-
-main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  // Initialize the provider
-  OpenGraphRequest().initProvider(OpenGraphProvider.CONFIG);
+void main() {
+  // Optional tuning:
+  // OpengraphCache.maxEntries = 500;
+  // OpengraphFetch.timeout = const Duration(seconds: 5);
   runApp(const MyApp());
 }
 
@@ -28,14 +23,16 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: DefaultTabController(
-        length: 4,
+        length: 5,
         child: Scaffold(
           appBar: AppBar(
             title: const Text('OpenGraph Examples'),
             bottom: const TabBar(
+              isScrollable: true,
               tabs: [
                 Tab(text: 'Basic Preview'),
                 Tab(text: 'Custom Styling'),
+                Tab(text: 'Options'),
                 Tab(text: 'Fetch API'),
                 Tab(text: 'Parsers'),
               ],
@@ -123,7 +120,94 @@ class MyApp extends StatelessWidget {
                 ),
               ),
 
-              // Tab 3: Fetch API Examples
+              // Tab 3: Error, fallback and performance options (1.1.0+)
+              ListView(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text(
+                      'Error, fallback and performance options',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text('hideOnError: renders nothing if the URL '
+                        'cannot be fetched (nothing shows below)'),
+                  ),
+                  const OpengraphPreview(
+                    url: "https://this-domain-does-not-exist.example",
+                    hideOnError: true,
+                  ),
+                  const Divider(),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text('childError: your own widget when the '
+                        'fetch fails'),
+                  ),
+                  OpengraphPreview(
+                    url: "https://this-domain-does-not-exist.example",
+                    childError: Card(
+                      margin: const EdgeInsets.all(8.0),
+                      color: Colors.red.shade50,
+                      child: const ListTile(
+                        leading: Icon(Icons.link_off, color: Colors.red),
+                        title: Text('Could not load this link'),
+                      ),
+                    ),
+                  ),
+                  const Divider(),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text('showReloadButton: retry button that '
+                        'invalidates the cache for that URL'),
+                  ),
+                  const OpengraphPreview(
+                    url: "https://this-domain-does-not-exist.example",
+                    showReloadButton: true,
+                    refresh: "Try again",
+                  ),
+                  const Divider(),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text('fallbackImage: replaces the default image '
+                        'when the page has no og:image'),
+                  ),
+                  OpengraphPreview(
+                    url: "https://example.com",
+                    fallbackImage: Container(
+                      color: Colors.blueGrey,
+                      child: const Center(
+                        child:
+                            Icon(Icons.public, size: 64, color: Colors.white70),
+                      ),
+                    ),
+                  ),
+                  const Divider(),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text('Long lists: previews are cached and '
+                        'fetched once; enableBlur: false avoids the '
+                        'expensive BackdropFilter per item'),
+                  ),
+                  // In a real app this would be a ListView.builder as the
+                  // only scrollable; previews are cached so scrolling back
+                  // never refetches.
+                  for (final url in const [
+                    "https://flutter.dev",
+                    "https://dart.dev",
+                    "https://pub.dev/packages/opengraph",
+                  ])
+                    OpengraphPreview(
+                      url: url,
+                      height: 150,
+                      enableBlur: false,
+                    ),
+                ],
+              ),
+
+              // Tab 4: Fetch API Examples
               SingleChildScrollView(
                 child: Column(
                   children: [
@@ -205,7 +289,7 @@ class MyApp extends StatelessWidget {
                 ),
               ),
 
-              // Tab 4: Parsers Examples
+              // Tab 5: Parsers Examples
               SingleChildScrollView(
                 child: Column(
                   children: [

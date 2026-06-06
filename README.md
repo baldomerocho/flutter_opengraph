@@ -1,7 +1,11 @@
 # Flutter OpenGraph Package
-[![codecov](https://codecov.io/gh/baldomerocho/flutter_opengraph/graph/badge.svg?token=3I56EQ85DC)](https://codecov.io/gh/baldomerocho/flutter_opengraph)
 
-[![Crear Release](https://github.com/baldomerocho/flutter_opengraph/actions/workflows/release.yaml/badge.svg?branch=master)](https://github.com/baldomerocho/flutter_opengraph/actions/workflows/release.yaml)
+[![pub package](https://img.shields.io/pub/v/opengraph.svg)](https://pub.dev/packages/opengraph)
+[![pub points](https://img.shields.io/pub/points/opengraph)](https://pub.dev/packages/opengraph/score)
+[![likes](https://img.shields.io/pub/likes/opengraph)](https://pub.dev/packages/opengraph/score)
+[![codecov](https://codecov.io/gh/baldomerocho/flutter_opengraph/graph/badge.svg?token=3I56EQ85DC)](https://codecov.io/gh/baldomerocho/flutter_opengraph)
+[![Tests](https://github.com/baldomerocho/flutter_opengraph/actions/workflows/release.yaml/badge.svg?branch=master)](https://github.com/baldomerocho/flutter_opengraph/actions/workflows/release.yaml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## What is OpenGraph?
 
@@ -19,8 +23,10 @@ The Flutter OpenGraph package provides a comprehensive solution for working with
 - **Rich Link Previews**: Transform plain URLs into engaging visual previews with title, description, and image
 - **Multiple Metadata Formats**: Support for OpenGraph, Twitter Cards, HTML meta tags, and JSON-LD formats
 - **Customizable UI**: Easily customize the appearance of link previews to match your app's design
-- **Caching**: Efficient memory caching to avoid redundant network requests
+- **Caching**: Efficient memory caching with in-flight request deduplication to avoid redundant network requests
 - **Direct API Access**: Use the fetch API directly to get raw metadata for custom implementations
+- **All Platforms**: Pure `package:http` networking — works on Android, iOS, web, Windows, macOS and Linux
+- **List-Friendly**: Designed for scrollable lists — memoized fetches, decode at display size, optional blur
 
 ## Screenshots
 
@@ -32,7 +38,7 @@ Add the package to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  opengraph: ^1.0.0
+  opengraph: ^1.2.0
 ```
 
 Then run:
@@ -53,42 +59,9 @@ This widget displays a rich preview of any URL, showing the title, description, 
 
 This function extracts OpenGraph metadata from a URL and returns it as a structured object, allowing you to use the data in your own custom UI.
 
-## Memory Management
-
-The package includes an intelligent caching system to optimize performance and reduce network requests:
-
-### Max Objects Configuration
-
-You can configure the maximum number of objects that the app will store in memory to avoid excessive memory usage:
-
-```dart
-OpenGraphConfiguration(maxObjects: 1000)
-```
-
-- Objects are only available during the session (ephemeral memory)
-- The cache uses a first-in-first-out (FIFO) approach when the limit is reached
-- This prevents redundant network requests for previously fetched URLs
-
 ## Usage
 
-### Configuration
-
-First, initialize the configuration with the maximum number of objects to store in memory:
-
-```dart
-class OpenGraphProvider {
-  static OpenGraphConfiguration CONFIG = OpenGraphConfiguration(
-      maxObjects: 1000
-  );
-}
-
-main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  // Initialize the provider
-  OpenGraphRequest().initProvider(OpenGraphProvider.CONFIG);
-  runApp(const MyApp());
-}
-```
+No initialization is required: `OpengraphPreview` and `opengraph_fetch` work out of the box, with results cached in memory automatically.
 
 ### Using the OpengraphPreview Widget
 
@@ -219,16 +192,7 @@ The extraction process follows a priority order, with OpenGraph tags taking prec
 import 'package:flutter/material.dart';
 import 'package:opengraph/opengraph.dart';
 
-class OpenGraphProvider {
-  static OpenGraphConfiguration CONFIG = OpenGraphConfiguration(
-      maxObjects: 1000
-  );
-}
-
-main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  // Initialize the provider
-  OpenGraphRequest().initProvider(OpenGraphProvider.CONFIG);
+void main() {
   runApp(const MyApp());
 }
 
@@ -337,9 +301,13 @@ try {
 
 ### Performance Optimization
 
-1. **Configure Cache Size**: Set an appropriate `maxObjects` value based on your app's memory constraints
-2. **Lazy Loading**: Use the OpengraphPreview widget in scrollable lists with lazy loading
-3. **Prefetching**: Consider prefetching OpenGraph data for important links that users are likely to interact with
+1. **Configure Cache Size**: Set an appropriate `OpengraphCache.maxEntries` value based on your app's memory constraints
+2. **Long Lists**: In scrollable lists with many previews set `enableBlur: false` — `BackdropFilter` is expensive per item
+3. **Prefetching**: Consider prefetching OpenGraph data (`opengraph_fetch(url)`) for important links — results land in the cache and the widget picks them up instantly
+
+### Legacy API
+
+`OpenGraphRequest` / `OpenGraphConfiguration` (the pre-1.0 singleton API) keep working and now use `package:http`, so they are also web-compatible. New code should prefer `opengraph_fetch` and `OpengraphCache`.
 
 ### UI Integration
 
