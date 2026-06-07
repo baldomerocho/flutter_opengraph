@@ -83,6 +83,64 @@ void main() {
       expect(OpengraphCache.length, 0);
       expect(OpengraphCache.get('https://a.com'), isNull);
     });
+
+    test('get, put and evict normalize their keys', () {
+      OpengraphCache.put('www.example.com', _entity('https://www.example.com'));
+
+      // Scheme-less and normalized forms address the same entry.
+      expect(OpengraphCache.get('https://www.example.com'), isNotNull);
+      expect(OpengraphCache.get('www.example.com'), isNotNull);
+      expect(OpengraphCache.length, 1);
+
+      OpengraphCache.evict('www.example.com');
+      expect(OpengraphCache.get('https://www.example.com'), isNull);
+    });
+  });
+
+  group('OpengraphCache TTL', () {
+    tearDown(() {
+      OpengraphCache.ttl = const Duration(hours: 24);
+      OpengraphCache.clock = DateTime.now;
+    });
+
+    test('expires entries older than ttl on access', () {
+      var current = DateTime(2026, 1, 1);
+      OpengraphCache.clock = () => current;
+      OpengraphCache.ttl = const Duration(minutes: 30);
+
+      OpengraphCache.put('https://a.com', _entity('https://a.com'));
+      expect(OpengraphCache.get('https://a.com'), isNotNull);
+
+      current = current.add(const Duration(minutes: 31));
+      expect(OpengraphCache.get('https://a.com'), isNull);
+      // Stale entries are removed, not just hidden.
+      expect(OpengraphCache.length, 0);
+    });
+
+    test('null ttl keeps entries for the whole session', () {
+      var current = DateTime(2026, 1, 1);
+      OpengraphCache.clock = () => current;
+      OpengraphCache.ttl = null;
+
+      OpengraphCache.put('https://a.com', _entity('https://a.com'));
+      current = current.add(const Duration(days: 365));
+
+      expect(OpengraphCache.get('https://a.com'), isNotNull);
+    });
+
+    test('maxAge overrides ttl per lookup', () {
+      var current = DateTime(2026, 1, 1);
+      OpengraphCache.clock = () => current;
+      OpengraphCache.ttl = null;
+
+      OpengraphCache.put('https://a.com', _entity('https://a.com'));
+      current = current.add(const Duration(hours: 1));
+
+      expect(
+          OpengraphCache.get('https://a.com',
+              maxAge: const Duration(minutes: 30)),
+          isNull);
+    });
   });
 
   group('opengraph_fetch caching', () {

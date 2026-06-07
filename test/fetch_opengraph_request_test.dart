@@ -1,3 +1,9 @@
+// The legacy OpenGraphRequest API is deprecated but still supported; these
+// tests keep covering it until its removal in 2.0.0.
+// ignore_for_file: deprecated_member_use_from_same_package
+
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -98,6 +104,47 @@ void main() {
       await request.fetch('https://second.example.com');
 
       expect(request.urls.length, 1);
+    });
+
+    test('findObjectOnList returns an empty entity for unknown ids', () {
+      final request = OpenGraphRequest();
+      final id = base64.encode(utf8.encode('https://unknown.example.com'));
+
+      final entity = request.findObjectOnList(id);
+
+      expect(entity.title, '');
+      expect(entity.description, '');
+      expect(entity.url, 'https://unknown.example.com');
+    });
+
+    test('sends the configured request headers', () async {
+      final request = OpenGraphRequest();
+      Map<String, String>? seen;
+      request.client = MockClient((req) async {
+        seen = req.headers;
+        return http.Response('<html></html>', 200,
+            headers: {'content-type': 'text/html; charset=utf-8'});
+      });
+
+      await request.fetch('https://headers.example.com');
+
+      expect(seen!['User-Agent'], contains('FlutterOpengraph'));
+    });
+
+    test('caches entities even when the page has no description', () async {
+      final request = OpenGraphRequest();
+      var calls = 0;
+      request.client = MockClient((req) async {
+        calls++;
+        return http.Response(
+            '<html><head><title>No description</title></head></html>', 200,
+            headers: {'content-type': 'text/html; charset=utf-8'});
+      });
+
+      await request.fetch('https://nodesc.example.com');
+      await request.fetch('https://nodesc.example.com');
+
+      expect(calls, 1);
     });
 
     test('returns the cached entity without refetching', () async {

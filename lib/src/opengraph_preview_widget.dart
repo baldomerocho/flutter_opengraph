@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:opengraph/src/models/open_graph_entity.dart';
 import 'package:opengraph/src/opengraph_fetch_functions.dart';
@@ -85,21 +87,32 @@ class _OpengraphPreviewState extends State<OpengraphPreview> {
   @override
   void initState() {
     super.initState();
-    _future = opengraph_fetch(widget.url, throwOnError: true);
+    _future = _fetch();
   }
 
   @override
   void didUpdateWidget(OpengraphPreview oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.url != widget.url) {
-      _future = opengraph_fetch(widget.url, throwOnError: true);
+      _future = _fetch();
     }
   }
 
+  Future<OpenGraphEntity?> _fetch() {
+    final future = opengraph_fetch(widget.url, throwOnError: true);
+    // FutureBuilder only subscribes on the next build; if the fetch fails
+    // before that, the error would be reported as unhandled. Mark it
+    // handled here — FutureBuilder still receives it and shows the error.
+    future.ignore();
+    return future;
+  }
+
   void _retry() {
+    // The cache normalizes its keys, so the raw widget URL addresses the
+    // same entry the fetch stored.
     OpengraphCache.evict(widget.url);
     setState(() {
-      _future = opengraph_fetch(widget.url, throwOnError: true);
+      _future = _fetch();
     });
   }
 
@@ -161,11 +174,12 @@ class _OpengraphPreviewState extends State<OpengraphPreview> {
   /// Same fallback the fetcher used to produce on network errors: the
   /// domain as title and the URL itself as description.
   OpenGraphEntity _fallbackEntity() {
+    final target = normalizeUrl(widget.url) ?? widget.url;
     return OpenGraphEntity(
-      title: getDomain(widget.url) ?? widget.url,
-      description: widget.url,
+      title: getDomain(target) ?? target,
+      description: target,
       image: '',
-      url: widget.url,
+      url: target,
       locale: 'en_US',
       type: 'website',
       siteName: '',

@@ -8,7 +8,10 @@ import 'package:opengraph/opengraph.dart';
 void main() {
   // Optional tuning:
   // OpengraphCache.maxEntries = 500;
+  // OpengraphCache.ttl = const Duration(hours: 1); // null = session-long
   // OpengraphFetch.timeout = const Duration(seconds: 5);
+  // OpengraphFetch.maxRedirects = 3;
+  // OpengraphFetch.requestHeaders['Accept-Language'] = 'es';
   runApp(const MyApp());
 }
 

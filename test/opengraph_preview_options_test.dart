@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:opengraph/opengraph.dart';
 
 OpenGraphEntity _entity({String image = ''}) {
@@ -85,6 +87,32 @@ void main() {
       await tester.tap(find.text('Try again'));
       await tester.pumpAndSettle();
       expect(find.text('Try again'), findsOneWidget);
+    });
+
+    testWidgets('retry evicts the normalized cache key for scheme-less urls',
+        (WidgetTester tester) async {
+      OpengraphFetch.clientFactory = () => MockClient((request) async {
+            throw http.ClientException('offline');
+          });
+      addTearDown(() => OpengraphFetch.clientFactory = http.Client.new);
+
+      await tester.pumpWidget(_app(const OpengraphPreview(
+        url: 'www.x.com',
+        showReloadButton: true,
+      )));
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.refresh), findsOneWidget);
+
+      // Seed the cache under the normalized key, then retry: _retry must
+      // evict that very entry even though the widget url has no scheme —
+      // otherwise the refetch below would serve the seeded entity.
+      OpengraphCache.put('https://www.x.com', _entity());
+      await tester.tap(find.byIcon(Icons.refresh));
+      await tester.pumpAndSettle();
+
+      expect(OpengraphCache.get('https://www.x.com'), isNull);
+      expect(find.byIcon(Icons.refresh), findsOneWidget);
+      expect(find.text('Cached title'), findsNothing);
     });
   });
 

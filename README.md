@@ -23,7 +23,8 @@ The Flutter OpenGraph package provides a comprehensive solution for working with
 - **Rich Link Previews**: Transform plain URLs into engaging visual previews with title, description, and image
 - **Multiple Metadata Formats**: Support for OpenGraph, Twitter Cards, HTML meta tags, and JSON-LD formats
 - **Customizable UI**: Easily customize the appearance of link previews to match your app's design
-- **Caching**: Efficient memory caching with in-flight request deduplication to avoid redundant network requests
+- **Caching**: Efficient memory caching with TTL expiration and in-flight request deduplication to avoid redundant network requests
+- **Robust Fetching**: URL normalization (`www.example.com` just works), controlled redirects with relative images resolved against the final URL, charset detection beyond UTF-8, configurable timeout and headers
 - **Direct API Access**: Use the fetch API directly to get raw metadata for custom implementations
 - **All Platforms**: Pure `package:http` networking — works on Android, iOS, web, Windows, macOS and Linux
 - **List-Friendly**: Designed for scrollable lists — memoized fetches, decode at display size, optional blur
@@ -103,9 +104,13 @@ Fetched URLs are cached in memory, so scrolling through lists does not refetch. 
 
 ```dart
 OpengraphCache.maxEntries = 500;          // default: 200
+OpengraphCache.ttl = const Duration(hours: 1); // default: 24h; null = session-long
 OpengraphCache.evict("https://a.com");    // drop a single URL
 OpengraphCache.clear();                   // drop everything
 OpengraphCache.enabled = false;           // disable caching entirely
+
+// Per-call freshness override:
+await opengraph_fetch(url, maxAge: Duration.zero); // force a refetch
 ```
 
 Network failures are not cached, so transient errors recover on the next attempt.
@@ -113,11 +118,25 @@ Network failures are not cached, so transient errors recover on the next attempt
 #### Network tuning
 
 ```dart
-OpengraphFetch.timeout = const Duration(seconds: 5);
+OpengraphFetch.timeout = const Duration(seconds: 5); // whole redirect chain
+OpengraphFetch.maxRedirects = 3;                     // default: 7
 OpengraphFetch.requestHeaders = {
   'User-Agent': 'MyApp/1.0',
 };
+
+// Per-call headers, merged over the defaults:
+await opengraph_fetch(url, headers: {'Accept-Language': 'es'});
 ```
+
+URLs without a scheme (`www.example.com`) are normalized to `https://`
+before fetching, redirects are followed manually so relative images resolve
+against the destination URL, and non-UTF-8 pages (latin1, windows-1252…)
+are decoded from the charset declared in the response.
+
+> **Flutter Web**: the browser enforces CORS, so most third-party sites
+> will refuse the fetch unless they allow cross-origin requests (or you
+> route through your own proxy). The browser also sets its own
+> `User-Agent`; custom headers are subject to CORS preflight.
 
 #### Styling Examples
 
@@ -184,7 +203,7 @@ The package can extract metadata from multiple formats:
 3. **HTML Meta Tags**: Standard HTML meta tags for title, description, etc.
 4. **JSON-LD**: Structured data in JSON-LD format (commonly used for SEO)
 
-The extraction process follows a priority order, with OpenGraph tags taking precedence when available, followed by Twitter Cards, then standard HTML meta tags, and finally JSON-LD.
+The extraction process follows a priority order, with OpenGraph tags taking precedence when available, followed by Twitter Cards, then JSON-LD, and finally standard HTML meta tags.
 
 ### Complete Example
 
@@ -307,7 +326,7 @@ try {
 
 ### Legacy API
 
-`OpenGraphRequest` / `OpenGraphConfiguration` (the pre-1.0 singleton API) keep working and now use `package:http`, so they are also web-compatible. New code should prefer `opengraph_fetch` and `OpengraphCache`.
+`OpenGraphRequest` / `OpenGraphConfiguration` (the pre-1.0 singleton API) are **deprecated as of 1.3.0** and will be removed in 2.0.0. They keep working — and now send the configured request headers and decode non-UTF-8 charsets — but only parse `og:` tags. New code should use `opengraph_fetch` and `OpengraphCache`, which also parse Twitter Card, JSON-LD and HTML meta fallbacks.
 
 ### UI Integration
 

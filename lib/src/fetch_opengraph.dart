@@ -3,7 +3,11 @@ import 'dart:convert';
 import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
 import 'package:opengraph/src/models/open_graph_entity.dart';
+import 'package:opengraph/src/opengraph_fetch_base.dart';
+import 'package:opengraph/src/utils/util.dart';
 
+@Deprecated('Use opengraph_fetch / OpengraphCache instead. '
+    'OpenGraphConfiguration will be removed in 2.0.0.')
 class OpenGraphConfiguration {
   final int maxObjects;
 
@@ -16,6 +20,8 @@ class OpenGraphConfiguration {
 }
 
 /// Interface for OpenGraphRequest
+@Deprecated('Use opengraph_fetch / OpengraphFetch.extract instead. '
+    'OpenGraphRequestInterface will be removed in 2.0.0.')
 abstract class OpenGraphRequestInterface {
   /// Fetches the OpenGraph data from the given URL
   Future<OpenGraphEntity?> fetch(String url);
@@ -25,6 +31,10 @@ abstract class OpenGraphRequestInterface {
 }
 
 /// OpenGraphRequest is a singleton class that fetches OpenGraph data from the given URL
+@Deprecated('Use opengraph_fetch / OpengraphFetch.extract instead: they '
+    'parse Twitter Card, JSON-LD and HTML meta fallbacks, send the '
+    'configured request headers, and share the OpengraphCache. '
+    'OpenGraphRequest will be removed in 2.0.0.')
 class OpenGraphRequest implements OpenGraphRequestInterface {
   /// Singleton instance
   static final OpenGraphRequest _instance = OpenGraphRequest._internal();
@@ -57,10 +67,11 @@ class OpenGraphRequest implements OpenGraphRequestInterface {
   @override
   Future<OpenGraphEntity> fetch(String url) async {
     var id = _encodeBase64(url);
-    if (findObjectOnList(id).description != '') return findObjectOnList(id);
+    if (urls.containsKey(id)) return findObjectOnList(id);
     try {
-      final response = await client.get(Uri.parse(url));
-      final responseBody = utf8.decode(response.bodyBytes);
+      final response = await client.get(Uri.parse(url),
+          headers: OpengraphFetch.requestHeaders);
+      final responseBody = decodeBody(response);
       final openGraph = await _obtainOpenGraph(responseBody, url);
       overrideObjectOnList(openGraph, id);
       maxObjects();

@@ -1,3 +1,18 @@
+## 1.3.0 (2026-06-06)
+* **URL normalization**: scheme-less URLs (`www.example.com`, `example.com/page`) are now prepended with `https://` and fetched, instead of always failing with "No host specified" (`normalizeUrl`)
+* **Charset detection**: response bodies are decoded from the charset declared in the Content-Type header or `<meta charset>` (latin1, ISO-8859-1, windows-1252…) instead of always assuming UTF-8; malformed bytes no longer lose the page
+* **Controlled redirects**: redirects (301/302/303/307/308) are followed manually with a configurable limit (`OpengraphFetch.maxRedirects`, default 7), and relative images are now resolved against the **final** URL after redirects — fixes broken images behind link shorteners. On the web (where the browser follows redirects itself) the final URL is picked up from the response when the platform exposes it. Sensitive headers (Authorization, Cookie) are dropped on cross-origin hops
+* **Cache TTL**: cached entries now expire (`OpengraphCache.ttl`, default 24h; set to null for session-long entries) and `opengraph_fetch` accepts a per-call `maxAge` override (e.g. `Duration.zero` to force a refetch)
+* `OpengraphCache.get/put/evict` normalize their keys, so `evict("www.example.com")` and `evict("https://www.example.com")` address the same entry
+* **Per-call headers**: `opengraph_fetch(url, headers: {...})` and `OpengraphFetch.extract(url, headers: {...})` merge custom headers over `requestHeaders` for a single request (auth, Accept-Language…)
+* `OpengraphFetch.clientFactory` is injectable for testing (e.g. with `MockClient`)
+* Legacy `OpenGraphRequest.fetch` now sends the configured request headers (it previously sent none, so sites that block the default Dart user agent returned errors), decodes non-UTF-8 charsets, and correctly caches pages without a description
+* **Deprecated**: `OpenGraphRequest`, `OpenGraphRequestInterface` and `OpenGraphConfiguration` — use `opengraph_fetch` / `OpengraphCache`; removal planned for 2.0.0
+* Fixed an unhandled-error report when a fetch failed before `FutureBuilder` subscribed (e.g. retry with an instantly-failing connection)
+* Inputs with explicit non-web schemes (`mailto:`, `tel:`, `data:`…) are rejected instead of being fetched as bogus https URLs
+* Requires `http: ^1.2.0`
+* Test coverage: 99.8% (134 tests)
+
 ## 1.2.0 (2026-06-06)
 * **Web support**: migrated the legacy `OpenGraphRequest` from `dart:io` to `package:http` — the package now supports all 6 platforms (Android, iOS, Web, Windows, macOS, Linux)
 * `OpenGraphRequest.client` is now injectable for testing (e.g. with `MockClient` from `package:http/testing.dart`)

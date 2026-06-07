@@ -1,3 +1,7 @@
+// The legacy OpenGraphRequest API is deprecated but still supported; these
+// tests keep covering it until its removal in 2.0.0.
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
