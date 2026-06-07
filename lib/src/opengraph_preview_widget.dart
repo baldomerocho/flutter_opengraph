@@ -5,6 +5,7 @@ import 'package:opengraph/src/models/open_graph_entity.dart';
 import 'package:opengraph/src/opengraph_fetch_functions.dart';
 import 'package:opengraph/src/utils/util.dart';
 import 'package:opengraph/src/widget_opengraph.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 /// A widget that fetches and displays OpenGraph data
 ///
@@ -57,6 +58,41 @@ class OpengraphPreview extends StatefulWidget {
   /// for better scrolling performance ([BackdropFilter] is expensive).
   final bool enableBlur;
 
+  /// Style merged over the default title style (white, bold).
+  final TextStyle? titleStyle;
+
+  /// Style merged over the default description style (white).
+  final TextStyle? descriptionStyle;
+
+  /// Style merged over the default host style (white54).
+  final TextStyle? hostStyle;
+
+  /// Maximum lines for the title (default: 1).
+  final int titleMaxLines;
+
+  /// Maximum lines for the description (default: 2).
+  final int descriptionMaxLines;
+
+  /// Color of the panel behind the texts (default: 50% black).
+  final Color overlayColor;
+
+  /// How the image fits its box (default: [BoxFit.fitWidth]).
+  final BoxFit imageFit;
+
+  /// Called when the loaded preview is tapped, e.g. to open the URL.
+  final VoidCallback? onTap;
+
+  /// Arrangement of image and texts (default: [OpenGraphLayout.overlay]).
+  final OpenGraphLayout layout;
+
+  /// Defer the fetch until the widget becomes visible, so long lists do
+  /// not fire every request at once. Off by default.
+  final bool lazyLoad;
+
+  /// Fraction of the widget that must be visible before a lazy fetch
+  /// starts (default: 0.1). Only used with [lazyLoad].
+  final double visibilityThreshold;
+
   const OpengraphPreview({
     super.key,
     required this.url,
@@ -73,6 +109,17 @@ class OpengraphPreview extends StatefulWidget {
     this.hideOnError = false,
     this.fallbackImage,
     this.enableBlur = true,
+    this.titleStyle,
+    this.descriptionStyle,
+    this.hostStyle,
+    this.titleMaxLines = 1,
+    this.descriptionMaxLines = 2,
+    this.overlayColor = const Color(0x80000000),
+    this.imageFit = BoxFit.fitWidth,
+    this.onTap,
+    this.layout = OpenGraphLayout.overlay,
+    this.lazyLoad = false,
+    this.visibilityThreshold = 0.1,
   });
 
   @override
@@ -84,17 +131,41 @@ class _OpengraphPreviewState extends State<OpengraphPreview> {
   /// rebuilds (e.g. scrolling inside lists) do not trigger new fetches.
   late Future<OpenGraphEntity?> _future;
 
+  /// Whether the fetch has been started. Always true unless [lazyLoad]
+  /// keeps it waiting for the widget to become visible.
+  bool _started = false;
+
   @override
   void initState() {
     super.initState();
-    _future = _fetch();
+    if (!widget.lazyLoad) _start();
   }
 
   @override
   void didUpdateWidget(OpengraphPreview oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (!_started) {
+      // Lazy preview not started yet: start right away when lazyLoad gets
+      // turned off; otherwise it fetches the (possibly new) url once it
+      // becomes visible.
+      if (!widget.lazyLoad) _start();
+      return;
+    }
     if (oldWidget.url != widget.url) {
       _future = _fetch();
+    }
+  }
+
+  void _start() {
+    _started = true;
+    _future = _fetch();
+  }
+
+  void _onVisibilityChanged(VisibilityInfo info) {
+    if (_started || !mounted) return;
+    if (info.visibleFraction > 0 &&
+        info.visibleFraction >= widget.visibilityThreshold) {
+      setState(_start);
     }
   }
 
@@ -194,11 +265,30 @@ class _OpengraphPreviewState extends State<OpengraphPreview> {
       borderRadius: widget.borderRadius,
       fallbackImage: widget.fallbackImage,
       enableBlur: widget.enableBlur,
+      titleStyle: widget.titleStyle,
+      descriptionStyle: widget.descriptionStyle,
+      hostStyle: widget.hostStyle,
+      titleMaxLines: widget.titleMaxLines,
+      descriptionMaxLines: widget.descriptionMaxLines,
+      overlayColor: widget.overlayColor,
+      imageFit: widget.imageFit,
+      onTap: widget.onTap,
+      layout: widget.layout,
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_started) {
+      // Lazy mode, still offscreen: show the placeholder and wait for the
+      // widget to enter the viewport before fetching.
+      return VisibilityDetector(
+        key: ObjectKey(this),
+        onVisibilityChanged: _onVisibilityChanged,
+        child: _decorated(_loadingContent()),
+      );
+    }
+
     return FutureBuilder<OpenGraphEntity?>(
       future: _future,
       builder: (context, snapshot) {

@@ -13,6 +13,11 @@ class OpengraphMetadataAdapter {
       locale: metadata.locale ?? 'en_US',
       type: metadata.type ?? 'website',
       siteName: metadata.siteName ?? '',
+      images: metadata.images,
+      videos: metadata.videos,
+      audios: metadata.audios,
+      structuredTags: metadata.structuredTags,
+      faviconUrl: metadata.faviconUrl,
     );
   }
 
@@ -26,6 +31,11 @@ class OpengraphMetadataAdapter {
     metadata.locale = entity.locale;
     metadata.type = entity.type;
     metadata.siteName = entity.siteName;
+    metadata.images = entity.images;
+    metadata.videos = entity.videos;
+    metadata.audios = entity.audios;
+    metadata.structuredTags = entity.structuredTags;
+    metadata.faviconUrl = entity.faviconUrl;
     return metadata;
   }
 }

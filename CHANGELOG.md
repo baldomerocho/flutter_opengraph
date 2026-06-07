@@ -1,3 +1,12 @@
+## 1.4.0 (2026-06-06)
+* **Rich OpenGraph model**: `OpenGraphEntity` now exposes every structured object — `images` (`List<OgImage>` with width/height/alt/secureUrl/type), `videos` (`List<OgVideo>`), `audios` (`List<OgAudio>`) and `structuredTags` (`article:*`, `book:*`, `profile:*`, `music:*`, `video:*` accumulated in document order). `images.first` always carries the preview image
+* **Favicon fallback**: `<link rel="icon">`/`apple-touch-icon` is parsed (`FaviconParser`), exposed as `entity.faviconUrl` and used as the last-resort image when no metadata format provides one
+* **JSON-LD `@graph`**: the parser now reads every `application/ld+json` script (head and body), traverses `@graph` containers and prefers Article/Product/WebSite-like nodes; invalid scripts are skipped
+* **CORS proxy for Flutter Web**: `OpengraphFetch.proxyUrl` routes requests through a proxy (`{url}` template or plain prefix); relative images keep resolving against the target site
+* **Widget customization**: `titleStyle`/`descriptionStyle`/`hostStyle` (merged over the defaults), `titleMaxLines`/`descriptionMaxLines`, `overlayColor`, `imageFit`, `onTap` and a new `layout: OpenGraphLayout.horizontal` variant (side image + texts)
+* **Lazy loading**: `lazyLoad: true` defers the fetch until the preview enters the viewport (`visibilityThreshold` configurable) — long lists no longer fire every request at once
+* Test coverage: 99.9% (178 tests)
+
 ## 1.3.0 (2026-06-06)
 * **URL normalization**: scheme-less URLs (`www.example.com`, `example.com/page`) are now prepended with `https://` and fetched, instead of always failing with "No host specified" (`normalizeUrl`)
 * **Charset detection**: response bodies are decoded from the charset declared in the Content-Type header or `<meta charset>` (latin1, ISO-8859-1, windows-1252…) instead of always assuming UTF-8; malformed bytes no longer lose the page

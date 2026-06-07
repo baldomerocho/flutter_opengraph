@@ -1,5 +1,7 @@
 // The base class for implementing a parser
 
+import 'package:opengraph/src/models/og_media.dart';
+
 mixin OpengraphKeys {
   static const keyTitle = 'title';
   static const keyDescription = 'description';
@@ -34,6 +36,23 @@ mixin BaseOpengraphParser {
 
 /// Container class for Metadata
 class OpengraphMetadata with BaseOpengraphParser, OpengraphKeys {
+  /// Structured `og:image` objects, in document order. [image] keeps the
+  /// first usable image for backwards compatibility.
+  List<OgImage> images = [];
+
+  /// Structured `og:video` objects, in document order.
+  List<OgVideo> videos = [];
+
+  /// Structured `og:audio` objects, in document order.
+  List<OgAudio> audios = [];
+
+  /// Vertical-specific tags (`article:*`, `book:*`, `profile:*`, `music:*`,
+  /// `video:*`) keyed by property name; properties may repeat.
+  Map<String, List<String>> structuredTags = {};
+
+  /// Favicon declared by the document, when any.
+  String? faviconUrl;
+
   bool get hasAllMetadata {
     return (title != null &&
         description != null &&
@@ -58,10 +77,14 @@ class OpengraphMetadata with BaseOpengraphParser, OpengraphKeys {
     };
   }
 
+  /// Serializes the base scalar fields only. The rich fields (images,
+  /// videos, audios, structuredTags, faviconUrl) are not included — use
+  /// `OpenGraphEntity.toJson` for a full serialization.
   Map<String, dynamic> toJson() {
     return toMap();
   }
 
+  /// Restores the base scalar fields only; see [toJson].
   static OpengraphMetadata fromJson(Map<String, dynamic> json) {
     final m = OpengraphMetadata();
     m.title = json[OpengraphKeys.keyTitle];

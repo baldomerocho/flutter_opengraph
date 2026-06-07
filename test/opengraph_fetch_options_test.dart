@@ -42,6 +42,7 @@ void main() {
   tearDown(() {
     OpengraphFetch.clientFactory = http.Client.new;
     OpengraphFetch.maxRedirects = 7;
+    OpengraphFetch.proxyUrl = null;
     OpengraphCache.clear();
     OpengraphCache.ttl = const Duration(hours: 24);
     OpengraphCache.clock = DateTime.now;
@@ -260,6 +261,124 @@ void main() {
           headers: {'Authorization': 'Bearer token'});
 
       expect(seen!['Authorization'], 'Bearer token');
+    });
+  });
+
+  group('proxyUrl', () {
+    test('routes the request through a {url} template proxy', () async {
+      Uri? requested;
+      OpengraphFetch.proxyUrl = 'https://proxy.example.com/?url={url}';
+      OpengraphFetch.clientFactory = () => MockClient((request) async {
+            requested = request.url;
+            return http.Response(
+                '<html><head><meta property="og:title" content="P"></head></html>',
+                200,
+                headers: {'content-type': 'text/html; charset=utf-8'});
+          });
+
+      final metadata = await OpengraphFetch.extract('https://target.com/page');
+
+      expect(
+          requested,
+          Uri.parse('https://proxy.example.com/'
+              '?url=${Uri.encodeComponent('https://target.com/page')}'));
+      expect(metadata!.title, 'P');
+    });
+
+    test('appends the encoded url to a plain prefix proxy', () async {
+      Uri? requested;
+      OpengraphFetch.proxyUrl = 'https://proxy.example.com/fetch?u=';
+      OpengraphFetch.clientFactory = () => MockClient((request) async {
+            requested = request.url;
+            return http.Response('<html></html>', 200,
+                headers: {'content-type': 'text/html; charset=utf-8'});
+          });
+
+      await OpengraphFetch.extract('https://target.com');
+
+      expect(
+          requested,
+          Uri.parse('https://proxy.example.com/fetch'
+              '?u=${Uri.encodeComponent('https://target.com')}'));
+    });
+
+    test('keeps the target url for relative image resolution', () async {
+      OpengraphFetch.proxyUrl = 'https://proxy.example.com/?url={url}';
+      OpengraphFetch.clientFactory = () => MockClient((request) async {
+            return http.Response(
+                '<html><head>'
+                '<meta property="og:image" content="/img.png">'
+                '</head></html>',
+                200,
+                headers: {'content-type': 'text/html; charset=utf-8'});
+          });
+
+      final metadata = await OpengraphFetch.extract('https://target.com/page');
+
+      // Relative images resolve against the target, not the proxy.
+      expect(metadata!.image, 'https://target.com/img.png');
+    });
+
+    test('re-proxies each hop of a passed-through redirect chain', () async {
+      final requested = <Uri>[];
+      OpengraphFetch.proxyUrl = 'https://proxy.example.com/?url={url}';
+      OpengraphFetch.clientFactory = () => MockClient((request) async {
+            requested.add(request.url);
+            if (requested.length == 1) {
+              // The proxy passes the target's redirect through.
+              return http.Response('', 302,
+                  headers: {'location': '/final-page'});
+            }
+            return http.Response(
+                '<html><head>'
+                '<meta property="og:title" content="Destination">'
+                '</head></html>',
+                200,
+                headers: {'content-type': 'text/html; charset=utf-8'});
+          });
+
+      final metadata = await OpengraphFetch.extract('https://target.com/short');
+
+      // The relative location resolves against the TARGET and the next hop
+      // goes through the proxy again.
+      expect(
+          requested[1],
+          Uri.parse('https://proxy.example.com/'
+              '?url=${Uri.encodeComponent('https://target.com/final-page')}'));
+      expect(metadata!.title, 'Destination');
+    });
+
+    test('ignores the response-reported url when a proxy is configured',
+        () async {
+      // A browser-like client reports the PROXY url as the final one;
+      // relative images must still resolve against the target.
+      OpengraphFetch.proxyUrl = 'https://proxy.example.com/?url={url}';
+      OpengraphFetch.clientFactory = () => _BrowserLikeClient(
+            Uri.parse('https://proxy.example.com/?url=whatever'),
+            '<html><head>'
+            '<meta property="og:image" content="/img.png">'
+            '</head></html>',
+          );
+
+      final metadata = await OpengraphFetch.extract('https://target.com/page');
+
+      expect(metadata!.image, 'https://target.com/img.png');
+    });
+  });
+
+  group('image content types', () {
+    test('direct image urls keep the images.first invariant', () async {
+      OpengraphFetch.clientFactory = () => MockClient((request) async {
+            return http.Response.bytes(const [1, 2, 3], 200,
+                headers: {'content-type': 'image/png'});
+          });
+
+      final metadata =
+          await OpengraphFetch.extract('https://cdn.example.com/x.png');
+
+      expect(metadata!.image, 'https://cdn.example.com/x.png');
+      // images.first must be usable whenever image is.
+      expect(metadata.images.single.url, 'https://cdn.example.com/x.png');
     });
   });
 

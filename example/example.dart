@@ -196,7 +196,8 @@ class MyApp extends StatelessWidget {
                   ),
                   // In a real app this would be a ListView.builder as the
                   // only scrollable; previews are cached so scrolling back
-                  // never refetches.
+                  // never refetches, and lazyLoad defers each fetch until
+                  // the item scrolls into view.
                   for (final url in const [
                     "https://flutter.dev",
                     "https://dart.dev",
@@ -206,7 +207,23 @@ class MyApp extends StatelessWidget {
                       url: url,
                       height: 150,
                       enableBlur: false,
+                      lazyLoad: true,
                     ),
+                  const Divider(),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text('Horizontal layout with custom styles and '
+                        'an onTap callback (1.4.0+)'),
+                  ),
+                  OpengraphPreview(
+                    url: "https://github.com/baldomerocho/flutter_opengraph",
+                    height: 110,
+                    layout: OpenGraphLayout.horizontal,
+                    titleStyle: const TextStyle(color: Colors.amberAccent),
+                    descriptionMaxLines: 3,
+                    onTap: () => debugPrint('Preview tapped: open the URL '
+                        'with url_launcher here'),
+                  ),
                 ],
               ),
 

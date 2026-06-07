@@ -15,24 +15,89 @@ class JsonLdParser with BaseOpengraphParser {
     _jsonData = _parseToJson(document);
   }
 
+  /// Node types that carry the metadata a preview wants, in the shapes
+  /// e-commerce and news sites publish.
+  static const Set<String> _preferredTypes = {
+    'Article',
+    'NewsArticle',
+    'BlogPosting',
+    'Product',
+    'WebSite',
+    'WebPage',
+    'Organization',
+    'VideoObject',
+  };
+
+  /// Reads every `application/ld+json` script in the document (head and
+  /// body), traversing `@graph` containers, and picks the best node across
+  /// ALL scripts: sites commonly emit one script per entity (e.g. a
+  /// BreadcrumbList first and the real Article later), so the preferred
+  /// node may not come from the first script. Scripts with invalid JSON
+  /// are skipped.
   dynamic _parseToJson(Document? document) {
-    final data = document?.head
-        ?.querySelector("script[type='application/ld+json']")
-        ?.innerHtml;
-    if (data == null) {
-      return null;
+    final scripts =
+        document?.querySelectorAll("script[type='application/ld+json']") ??
+            const <Element>[];
+    final nodes = <dynamic>[];
+    for (final script in scripts) {
+      dynamic decoded;
+      try {
+        decoded = jsonDecode(script.innerHtml);
+      } on FormatException {
+        continue;
+      }
+      final node = _selectNode(decoded);
+      if (node != null) {
+        nodes.add(node);
+      }
     }
-    var d = jsonDecode(data);
-    return d;
+    for (final node in nodes) {
+      if (node is Map && _isPreferredType(node['@type'])) {
+        return node;
+      }
+    }
+    return nodes.isEmpty ? null : nodes.first;
+  }
+
+  /// Picks the most relevant node: unwraps `@graph`, and inside lists
+  /// prefers nodes whose `@type` is known to describe the page.
+  dynamic _selectNode(dynamic data) {
+    if (data is Map) {
+      final graph = data['@graph'];
+      if (graph is List) {
+        return _selectNode(graph);
+      }
+      return data;
+    }
+    if (data is List) {
+      for (final item in data) {
+        if (item is Map && _isPreferredType(item['@type'])) {
+          return item;
+        }
+      }
+      for (final item in data) {
+        if (item is Map) {
+          return item;
+        }
+      }
+    }
+    return null;
+  }
+
+  bool _isPreferredType(dynamic type) {
+    if (type is String) return _preferredTypes.contains(type);
+    if (type is List) return type.any(_isPreferredType);
+    return false;
   }
 
   /// Get the [OpengraphMetadata.title] from the json-ld data
+  ///
+  /// [_parseToJson] always selects a single node (Map) or null, so the
+  /// getters only need to handle that shape.
   @override
   String? get title {
     final data = _jsonData;
-    if (data is List) {
-      return data.first['name'];
-    } else if (data is Map) {
+    if (data is Map) {
       return data.get('name') ?? data.get('headline');
     }
     return null;
@@ -42,9 +107,7 @@ class JsonLdParser with BaseOpengraphParser {
   @override
   String? get description {
     final data = _jsonData;
-    if (data is List) {
-      return data.first['description'] ?? data.first['headline'];
-    } else if (data is Map) {
+    if (data is Map) {
       return data.get('description') ?? data.get('headline');
     }
     return null;
@@ -54,9 +117,7 @@ class JsonLdParser with BaseOpengraphParser {
   @override
   String? get image {
     final data = _jsonData;
-    if (data is List && data.isNotEmpty) {
-      return _imageResultToString(data.first['logo'] ?? data.first['image']);
-    } else if (data is Map) {
+    if (data is Map) {
       return _imageResultToString(
           data.getDynamic('logo') ?? data.getDynamic('image'));
     }
@@ -68,9 +129,7 @@ class JsonLdParser with BaseOpengraphParser {
   @override
   String? get url {
     final data = _jsonData;
-    if (data is List) {
-      return data.first['url'];
-    } else if (data is Map) {
+    if (data is Map) {
       return data.get('url');
     }
     return null;
@@ -84,9 +143,7 @@ class JsonLdParser with BaseOpengraphParser {
   @override
   String? get type {
     final data = _jsonData;
-    if (data is List) {
-      return data.first['@type'] ?? 'website';
-    } else if (data is Map) {
+    if (data is Map) {
       return data.get('@type') ?? 'website';
     }
     return 'website';
@@ -96,9 +153,7 @@ class JsonLdParser with BaseOpengraphParser {
   @override
   String? get siteName {
     final data = _jsonData;
-    if (data is List) {
-      return data.first['publisher']?['name'];
-    } else if (data is Map) {
+    if (data is Map) {
       final publisher = data.getDynamic('publisher');
       if (publisher is Map) {
         return publisher.get('name');

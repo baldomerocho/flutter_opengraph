@@ -14,6 +14,7 @@ export 'src/opengraph_fetch_functions.dart';
 
 // Export the models
 export 'src/models/open_graph_entity.dart';
+export 'src/models/og_media.dart';
 
 // Export the widget components
 export 'src/widget_opengraph.dart';

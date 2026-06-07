@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:html/dom.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as parser;
+import 'package:opengraph/src/models/og_media.dart';
 import 'package:opengraph/src/parsers/parsers.dart';
 import 'package:opengraph/src/utils/util.dart';
 
@@ -31,6 +32,32 @@ class OpengraphFetch {
   /// shared or long-lived instance. Replaceable, e.g. with a MockClient
   /// from `package:http/testing.dart` in tests.
   static http.Client Function() clientFactory = http.Client.new;
+
+  /// Optional proxy every request is routed through — mainly for Flutter
+  /// Web, where CORS blocks direct fetches to most third-party sites.
+  ///
+  /// Use a `{url}` placeholder for the encoded target URL
+  /// (`'https://corsproxy.io/?url={url}'`) or a plain prefix
+  /// (`'https://my-proxy.example.com/?'`), which gets the encoded URL
+  /// appended. Note that images still load directly from their hosts: on
+  /// the web they may need proxying too, e.g. via `Image.network` with a
+  /// rewritten URL.
+  ///
+  /// When the target site redirects, the proxy must either follow the
+  /// redirect itself or pass the target's `Location` header through: each
+  /// hop of the manual redirect chain is resolved against the target URL
+  /// and routed through the proxy again.
+  static String? proxyUrl;
+
+  /// Routes [uri] through [proxyUrl] when one is configured.
+  static Uri _applyProxy(Uri uri) {
+    final proxy = proxyUrl;
+    if (proxy == null || proxy.isEmpty) return uri;
+    final encoded = Uri.encodeComponent(uri.toString());
+    return Uri.parse(proxy.contains('{url}')
+        ? proxy.replaceFirst('{url}', encoded)
+        : '$proxy$encoded');
+  }
 
   /// Fetches a [url], validates it, and returns [OpengraphMetadata].
   ///
@@ -80,6 +107,9 @@ class OpengraphFetch {
         defaultOutput.title = '';
         defaultOutput.description = '';
         defaultOutput.image = finalUrl;
+        // Keep the documented invariant: images.first is usable whenever
+        // image is.
+        defaultOutput.images = [OgImage(url: finalUrl)];
         return defaultOutput;
       }
 
@@ -136,7 +166,7 @@ class OpengraphFetch {
     for (var redirects = 0;; redirects++) {
       // On platforms that cannot disable redirect following (web), the
       // client resolves the chain itself and a 3xx never reaches this loop.
-      final request = http.Request('GET', current)
+      final request = http.Request('GET', _applyProxy(current))
         ..followRedirects = false
         ..headers.addAll(currentHeaders);
       final streamed = await client.send(request);
@@ -145,9 +175,12 @@ class OpengraphFetch {
       if (!_redirectCodes.contains(response.statusCode) || location == null) {
         // Clients that know the URL they actually responded from (the
         // browser does, after transparently following redirects) report
-        // the real final URL.
-        if (streamed case http.BaseResponseWithUrl(:final url)) {
-          current = url;
+        // the real final URL — unless a proxy is in the way, in which case
+        // the reported URL would be the proxy's, not the target's.
+        if (proxyUrl == null) {
+          if (streamed case http.BaseResponseWithUrl(:final url)) {
+            current = url;
+          }
         }
         return (response: response, finalUri: current);
       }

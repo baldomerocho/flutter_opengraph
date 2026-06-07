@@ -21,13 +21,14 @@ The Flutter OpenGraph package provides a comprehensive solution for working with
 ### Key Features
 
 - **Rich Link Previews**: Transform plain URLs into engaging visual previews with title, description, and image
-- **Multiple Metadata Formats**: Support for OpenGraph, Twitter Cards, HTML meta tags, and JSON-LD formats
-- **Customizable UI**: Easily customize the appearance of link previews to match your app's design
+- **Multiple Metadata Formats**: Support for OpenGraph, Twitter Cards, HTML meta tags, JSON-LD (including `@graph`) and favicon fallback
+- **Rich Structured Data**: Every `og:image`/`og:video`/`og:audio` object with width/height/alt, plus `article:*`/`book:*` tags
+- **Customizable UI**: Text styles, overlay color, image fit, tap callback and an alternative horizontal layout
 - **Caching**: Efficient memory caching with TTL expiration and in-flight request deduplication to avoid redundant network requests
-- **Robust Fetching**: URL normalization (`www.example.com` just works), controlled redirects with relative images resolved against the final URL, charset detection beyond UTF-8, configurable timeout and headers
+- **Robust Fetching**: URL normalization (`www.example.com` just works), controlled redirects with relative images resolved against the final URL, charset detection beyond UTF-8, configurable timeout, headers and CORS proxy
 - **Direct API Access**: Use the fetch API directly to get raw metadata for custom implementations
 - **All Platforms**: Pure `package:http` networking — works on Android, iOS, web, Windows, macOS and Linux
-- **List-Friendly**: Designed for scrollable lists — memoized fetches, decode at display size, optional blur
+- **List-Friendly**: Designed for scrollable lists — lazy fetch on viewport entry, memoized fetches, decode at display size, optional blur
 
 ## Screenshots
 
@@ -97,6 +98,17 @@ The `OpengraphPreview` widget supports the following customization options:
 | `error` | String | Message shown when the fetch fails |
 | `fallbackImage` | Widget? | Custom widget shown when the page has no og:image, instead of the default image |
 | `enableBlur` | bool | Blur effect behind the text overlay; disable in long lists for better performance (default: true) |
+| `titleStyle` | TextStyle? | Merged over the default title style (white, bold) |
+| `descriptionStyle` | TextStyle? | Merged over the default description style (white) |
+| `hostStyle` | TextStyle? | Merged over the default host style (white54) |
+| `titleMaxLines` | int | Maximum lines for the title (default: 1) |
+| `descriptionMaxLines` | int | Maximum lines for the description (default: 2) |
+| `overlayColor` | Color | Color of the panel behind the texts (default: 50% black) |
+| `imageFit` | BoxFit | How the image fits its box (default: fitWidth) |
+| `onTap` | VoidCallback? | Called when the loaded preview is tapped, e.g. to open the URL |
+| `layout` | OpenGraphLayout | `overlay` (image with texts on top, default) or `horizontal` (side image + texts) |
+| `lazyLoad` | bool | Defer the fetch until the widget is visible (default: false) |
+| `visibilityThreshold` | double | Visible fraction that starts a lazy fetch (default: 0.1) |
 
 #### Caching
 
@@ -133,10 +145,62 @@ before fetching, redirects are followed manually so relative images resolve
 against the destination URL, and non-UTF-8 pages (latin1, windows-1252…)
 are decoded from the charset declared in the response.
 
-> **Flutter Web**: the browser enforces CORS, so most third-party sites
-> will refuse the fetch unless they allow cross-origin requests (or you
-> route through your own proxy). The browser also sets its own
-> `User-Agent`; custom headers are subject to CORS preflight.
+#### Flutter Web and CORS
+
+On the web the browser enforces CORS, so most third-party sites refuse a
+direct fetch. Route the requests through a proxy with
+`OpengraphFetch.proxyUrl` — either a `{url}` template or a plain prefix
+that gets the encoded URL appended:
+
+```dart
+OpengraphFetch.proxyUrl = 'https://corsproxy.io/?url={url}';
+// or
+OpengraphFetch.proxyUrl = 'https://my-proxy.example.com/fetch?u=';
+```
+
+Relative images keep resolving against the target site, not the proxy.
+Note the browser also sets its own `User-Agent`, custom headers are
+subject to CORS preflight, and the preview images themselves still load
+from their original hosts.
+
+#### Lazy loading in lists
+
+With `lazyLoad: true` the fetch is deferred until the preview scrolls into
+the viewport, so a long list does not fire every request at once:
+
+```dart
+ListView.builder(
+  itemBuilder: (context, index) => OpengraphPreview(
+    url: urls[index],
+    lazyLoad: true,
+    enableBlur: false, // cheaper scrolling
+  ),
+)
+```
+
+Results land in the cache (with TTL), in-flight requests are deduplicated,
+and requests already started keep running to completion so the cache warms
+up even if the user scrolls past.
+
+#### Rich metadata
+
+`OpenGraphEntity` exposes the full structured protocol beyond the basic
+fields:
+
+```dart
+final entity = await opengraph_fetch("https://example.com/article");
+
+entity!.images;          // List<OgImage>: every og:image with width/height/alt/secureUrl
+entity.images.first.width;
+entity.videos;           // List<OgVideo>: og:video objects
+entity.audios;           // List<OgAudio>: og:audio objects
+entity.structuredTags;   // article:*, book:*, profile:*, music:*, video:* tags
+entity.structuredTags['article:tag']; // e.g. ["flutter", "opengraph"]
+entity.faviconUrl;       // <link rel="icon"> resolved absolute, if any
+```
+
+When a page has no image in any metadata format, the favicon is used as a
+last-resort image, so previews still show something recognizable.
 
 #### Styling Examples
 
