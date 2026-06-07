@@ -11,6 +11,7 @@ export 'src/fetch_opengraph.dart';
 export 'opengraph_fetch.dart';
 export 'src/parsers/parsers.dart';
 export 'src/opengraph_fetch_functions.dart';
+export 'src/opengraph_cache_store.dart';
 
 // Export the models
 export 'src/models/open_graph_entity.dart';

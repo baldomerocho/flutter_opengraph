@@ -24,7 +24,7 @@ The Flutter OpenGraph package provides a comprehensive solution for working with
 - **Multiple Metadata Formats**: Support for OpenGraph, Twitter Cards, HTML meta tags, JSON-LD (including `@graph`) and favicon fallback
 - **Rich Structured Data**: Every `og:image`/`og:video`/`og:audio` object with width/height/alt, plus `article:*`/`book:*` tags
 - **Customizable UI**: Text styles, overlay color, image fit, tap callback and an alternative horizontal layout
-- **Caching**: Efficient memory caching with TTL expiration and in-flight request deduplication to avoid redundant network requests
+- **Caching**: Efficient memory caching with TTL expiration, in-flight request deduplication and an optional pluggable persistent store so previews survive app restarts
 - **Robust Fetching**: URL normalization (`www.example.com` just works), controlled redirects with relative images resolved against the final URL, charset detection beyond UTF-8, configurable timeout, headers and CORS proxy
 - **Direct API Access**: Use the fetch API directly to get raw metadata for custom implementations
 - **All Platforms**: Pure `package:http` networking — works on Android, iOS, web, Windows, macOS and Linux
@@ -127,6 +127,64 @@ await opengraph_fetch(url, maxAge: Duration.zero); // force a refetch
 
 Network failures are not cached, so transient errors recover on the next attempt.
 
+#### Persistent cache
+
+Previews can survive app restarts by plugging a storage backend into
+`OpengraphCache.store`. The package ships no storage dependency — implement
+the small `OpengraphCacheStore` interface over whatever your app already
+uses. With `shared_preferences`:
+
+```dart
+import 'dart:convert';
+
+import 'package:opengraph/opengraph.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class PrefsCacheStore implements OpengraphCacheStore {
+  static const _prefix = 'og_cache:';
+
+  @override
+  Future<OpengraphCacheEntry?> read(String url) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('$_prefix$url');
+    if (raw == null) return null;
+    return OpengraphCacheEntry.fromJson(jsonDecode(raw));
+  }
+
+  @override
+  Future<void> write(String url, OpengraphCacheEntry entry) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('$_prefix$url', jsonEncode(entry.toJson()));
+  }
+
+  @override
+  Future<void> delete(String url) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('$_prefix$url');
+  }
+
+  @override
+  Future<void> clear() async {
+    final prefs = await SharedPreferences.getInstance();
+    for (final key in prefs.getKeys().where((k) => k.startsWith(_prefix))) {
+      await prefs.remove(key);
+    }
+  }
+}
+
+void main() {
+  OpengraphCache.store = PrefsCacheStore();
+  runApp(const MyApp());
+}
+```
+
+Memory stays the source of truth: successful fetches write through to the
+store, memory misses are answered from it (validated against the same
+TTL/`maxAge` rules) before hitting the network, and any error thrown by the
+store is swallowed — a broken store never breaks fetching. Use
+`OpengraphCache.clear(memoryOnly: true)` to free memory without wiping the
+persisted entries.
+
 #### Network tuning
 
 ```dart
@@ -136,8 +194,9 @@ OpengraphFetch.requestHeaders = {
   'User-Agent': 'MyApp/1.0',
 };
 
-// Per-call headers, merged over the defaults:
+// Per-call headers and timeout, merged over / overriding the defaults:
 await opengraph_fetch(url, headers: {'Accept-Language': 'es'});
+await opengraph_fetch(url, timeout: const Duration(seconds: 3));
 ```
 
 URLs without a scheme (`www.example.com`) are normalized to `https://`

@@ -1,3 +1,11 @@
+## 1.5.0 (2026-06-06)
+* **Persistent cache**: new pluggable `OpengraphCache.store` (`OpengraphCacheStore` interface: read/write/delete/clear + serializable `OpengraphCacheEntry`), so previews survive app restarts. Memory stays the source of truth: fetches write through fire-and-forget, memory misses are answered from the store (validated against TTL/`maxAge`) before hitting the network, stale persisted entries are deleted, and store errors are swallowed — a broken store never breaks fetching. No storage dependency is imposed: bring your own backend (shared_preferences/hive/file; README includes a copy-paste implementation)
+* Store reads are bounded by `OpengraphCache.storeTimeout` (default 5s): a hanging store falls through to the network instead of freezing the fetch
+* A late store read never overwrites a fresher entry that landed in memory while it was in flight; corrupt persisted JSON decodes to a stale entry and gets dropped instead of throwing
+* `OpengraphCache.clear(memoryOnly: true)` frees memory without wiping the persisted entries
+* **Per-call timeout**: `opengraph_fetch(url, timeout: ...)` / `OpengraphFetch.extract(url, timeout: ...)` override the global `OpengraphFetch.timeout` for a single request
+* Test coverage: 99.9% (208 tests)
+
 ## 1.4.0 (2026-06-06)
 * **Rich OpenGraph model**: `OpenGraphEntity` now exposes every structured object — `images` (`List<OgImage>` with width/height/alt/secureUrl/type), `videos` (`List<OgVideo>`), `audios` (`List<OgAudio>`) and `structuredTags` (`article:*`, `book:*`, `profile:*`, `music:*`, `video:*` accumulated in document order). `images.first` always carries the preview image
 * **Favicon fallback**: `<link rel="icon">`/`apple-touch-icon` is parsed (`FaviconParser`), exposed as `entity.faviconUrl` and used as the last-resort image when no metadata format provides one

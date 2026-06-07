@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -379,6 +380,42 @@ void main() {
       expect(metadata!.image, 'https://cdn.example.com/x.png');
       // images.first must be usable whenever image is.
       expect(metadata.images.single.url, 'https://cdn.example.com/x.png');
+    });
+  });
+
+  group('per-call timeout', () {
+    test('a tighter per-call deadline beats the global default', () async {
+      OpengraphFetch.clientFactory = () => MockClient((request) async {
+            await Future<void>.delayed(const Duration(milliseconds: 200));
+            return http.Response('<html></html>', 200,
+                headers: {'content-type': 'text/html; charset=utf-8'});
+          });
+
+      // 20ms per-call deadline: the 200ms response times out…
+      await expectLater(
+        OpengraphFetch.extract('https://slow.example.com',
+            throwOnError: true, timeout: const Duration(milliseconds: 20)),
+        throwsA(isA<TimeoutException>()),
+      );
+
+      // …while the global default (10s) lets the same request finish.
+      final metadata = await OpengraphFetch.extract('https://slow.example.com');
+      expect(metadata, isNotNull);
+    });
+
+    test('opengraph_fetch forwards the per-call timeout', () async {
+      OpengraphFetch.clientFactory = () => MockClient((request) async {
+            await Future<void>.delayed(const Duration(milliseconds: 200));
+            return http.Response('<html></html>', 200,
+                headers: {'content-type': 'text/html; charset=utf-8'});
+          });
+
+      final entity = await opengraph_fetch('https://slow2.example.com',
+          timeout: const Duration(milliseconds: 20));
+
+      // Default error handling: the timeout degrades to the fallback entity.
+      expect(entity!.description, 'https://slow2.example.com');
+      expect(entity.type, 'website');
     });
   });
 

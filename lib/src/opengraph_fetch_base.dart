@@ -10,7 +10,8 @@ import 'package:opengraph/src/utils/util.dart';
 class OpengraphFetch {
   /// Maximum time to wait for the page before giving up, so a slow URL does
   /// not keep a preview spinner hanging forever. Covers the whole redirect
-  /// chain, not each hop individually.
+  /// chain, not each hop individually. Can be overridden per call via the
+  /// `timeout` parameter of [extract].
   static Duration timeout = const Duration(seconds: 10);
 
   /// Maximum number of HTTP redirects (301/302/303/307/308) followed before
@@ -71,14 +72,17 @@ class OpengraphFetch {
   /// response when the platform exposes it. Sensitive headers
   /// (Authorization, Cookie) are dropped on cross-origin hops.
   ///
-  /// [headers] are merged over [requestHeaders] for this call only, e.g.
-  /// for per-site authentication or an Accept-Language.
+  /// [headers] are merged over [requestHeaders] and [timeout] overrides
+  /// [OpengraphFetch.timeout], both for this call only — e.g. for per-site
+  /// authentication, an Accept-Language, or a tighter deadline.
   ///
   /// On fetch errors (network failure, timeout, non-200 response) it returns
   /// a fallback metadata built from the URL. Pass [throwOnError] to propagate
   /// those errors to the caller instead.
   static Future<OpengraphMetadata?> extract(String url,
-      {bool throwOnError = false, Map<String, String>? headers}) async {
+      {bool throwOnError = false,
+      Map<String, String>? headers,
+      Duration? timeout}) async {
     final normalized = normalizeUrl(url);
     if (normalized == null) {
       return null;
@@ -94,10 +98,14 @@ class OpengraphFetch {
 
     // Make our network call
     try {
-      final result = await _get(Uri.parse(normalized), {
-        ...requestHeaders,
-        if (headers != null) ...headers,
-      });
+      final result = await _get(
+        Uri.parse(normalized),
+        {
+          ...requestHeaders,
+          if (headers != null) ...headers,
+        },
+        timeout ?? OpengraphFetch.timeout,
+      );
       final response = result.response;
       final finalUrl = result.finalUri.toString();
       final headerContentType = response.headers['content-type'];
@@ -145,7 +153,7 @@ class OpengraphFetch {
   /// but never exposes the destination, which is needed to resolve relative
   /// image paths against the real domain.
   static Future<({http.Response response, Uri finalUri})> _get(
-      Uri uri, Map<String, String> headers) async {
+      Uri uri, Map<String, String> headers, Duration requestTimeout) async {
     final client = clientFactory();
     final result = _followRedirects(client, uri, headers);
     // If the timeout below fires, the redirect chain keeps failing in the
@@ -153,7 +161,7 @@ class OpengraphFetch {
     // not reported as uncaught.
     result.ignore();
     try {
-      return await result.timeout(timeout);
+      return await result.timeout(requestTimeout);
     } finally {
       client.close();
     }
